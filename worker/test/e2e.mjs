@@ -30,6 +30,7 @@ const INIT = await initData({ id: 1001, first_name: 'Илья' });
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 390, height: 780 }, deviceScaleFactor: 2, hasTouch: true });
 const page = await ctx.newPage();
+await page.addInitScript(() => { window.__noTips = true; });
 const errors = [];
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes('Failed to load resource')) errors.push('console: ' + m.text()); });
@@ -56,6 +57,7 @@ await page.waitForSelector('[data-ob="next"]'); await shot('01-welcome');
 await click('[data-ob="next"]');
 await click('[data-ava="f2"]'); await page.fill('#obName', 'Илья'); await shot('02-avatar');
 await click('[data-ob="next"]');
+await click('[data-obhero="lifter"]'); await click('[data-obsex="f"]'); await shot('03a-hero-female');
 await click('[data-obhero="cat"]'); await shot('03-hero');
 await click('[data-ob="next"]'); await page.selectOption('#bdD', '15'); await page.selectOption('#bdM', '3');
 await click('[data-ob="finish"]');
@@ -117,6 +119,13 @@ if (srv2.heroes.dog || cd.own || cd.shards !== 10) errors.push('shard cap ' + JS
 const bk = await page.evaluate(() => { S.energy = 50; S.board = S.board.map(()=>null); render(); const e0 = S.energy; document.querySelector('[data-basket]').click(); return { de: e0 - S.energy, items: S.board.filter(Boolean).length, lv: S.board.filter(Boolean).every(b => b.l === 1) }; });
 if (bk.de !== 5 || bk.items !== 3 || !bk.lv) errors.push('basket ' + JSON.stringify(bk)); else console.log('basket: -5 energy, 3 products');
 await shot('06c-basket');
+// tips: dim screen + highlighted element, tap to go on
+await page.evaluate(() => { window.__noTips = false; S.tips = []; view = 'kitchen'; render(); });
+await page.waitForTimeout(700); await shot('06d-tip1');
+const tp = await page.evaluate(() => !!document.querySelector('.coach .tip'));
+if (!tp) errors.push('no tip shown'); else console.log('tips shown');
+await page.click('.coach'); await page.waitForTimeout(300); await shot('06e-tip2');
+await page.evaluate(() => { while(document.querySelector('.coach')) document.querySelector('.coach').click(); window.__noTips = true; S.tips = Object.keys(TIPS); });
 // home + renovation
 await page.evaluate(() => { S.coins += 100; });
 await click('.nav [data-v="home"]'); await shot('07a-street');
@@ -238,7 +247,7 @@ if (ms.goal !== 3 || ms.login !== 1) errors.push('mission counters ' + JSON.stri
 const tk0 = await page.evaluate(() => S.tok||0);
 await click('[data-mclaim="day:login"]'); await click('[data-mclaim="day:goal"]');
 const tk1 = await page.evaluate(() => ({ tok: S.tok, pts: misPts('day') }));
-if (tk1.tok !== tk0 + 10 || tk1.pts !== 25) errors.push('mission claim ' + JSON.stringify(tk1)); else console.log('missions claimed', JSON.stringify(tk1));
+if (tk1.tok !== tk0 + 10 || tk1.pts !== 30) errors.push('mission claim ' + JSON.stringify(tk1)); else console.log('missions claimed', JSON.stringify(tk1));
 const j0m = await page.evaluate(() => S.jars||0);
 await click('[data-mbox="day:0"]');
 const j1m = await page.evaluate(() => ({ jars: S.jars, bx: S.mis.bx }));

@@ -152,6 +152,12 @@ button.pill{border:0;font:inherit;color:inherit;cursor:pointer}
 .g3{grid-template-columns:repeat(3,1fr)}
 .rtag{display:inline-block;color:#fff;font-size:10px;font-weight:800;border-radius:6px;padding:1px 6px;vertical-align:middle}
 .sub{font-size:14px;color:var(--wood);display:block}
+.coach{position:fixed;inset:0;z-index:90}
+.coach .hole{position:fixed;border-radius:14px;box-shadow:0 0 0 9999px rgba(20,12,6,.68);transition:all .25s;pointer-events:none;outline:3px solid #ffd76a}
+.coach .tip{position:fixed;left:12px;right:12px;max-width:480px;margin:0 auto;background:var(--cream);border:4px solid var(--wood);border-radius:16px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start;box-shadow:0 8px 20px rgba(0,0,0,.35)}
+.coach .tip .ic{width:52px;height:52px;flex:0 0 auto;font-size:36px}
+.coach .tip b{display:block;color:var(--wood);font-size:15px;margin-bottom:3px}.coach .tip p{margin:0;font-size:14px;line-height:1.4;color:var(--ink)}
+.coach .tip small{display:block;margin-top:6px;color:var(--muted);font-weight:700;font-size:12px}
 .mtop{border-radius:14px;background:linear-gradient(160deg,#5fae4f,#2f7a3a);border:3px solid var(--wood);padding:8px 10px 10px;color:#fff;display:flex;flex-direction:column;gap:8px}
 .mtop .tm{font-weight:800;font-size:13px;display:flex;justify-content:space-between;gap:8px}
 .mtrack{position:relative;height:58px;margin:0 6px}
@@ -277,6 +283,10 @@ const HEROES = {
 };
 const HERO_IDS = Object.keys(HEROES);
 const STARTERS = ['trainer','lifter','office','cat'];
+// женские версии героев (у остальных скоро появятся): образ героини
+const FEM = { lifter:'lf_f', trainer:'tf_f', office:'of_f' };
+const FEM_NAME = { lifter:'Лифтёрша', trainer:'Фитнес-тренер', office:'Офисница' };
+const isFem = h => !!(S && S.heroes && S.heroes[h] && S.heroes[h].sex==='f' && FEM[h]);
 const GIFT_LEVELS = [3, 6, 10];             // уровни, на которых бесплатно приходит следующий стартовый герой
 const HERO_PRICE = { rare:300, epic:500 };  // ⭐
 const SHARDS_NEED = 10;
@@ -285,8 +295,8 @@ const DSHOP = { jar:{coins:80, lim:3, n:'Банка энергии', d:'+5 ⚡'}
 const WSHOP = { coins:300, lim:3 };
 // миссии — те же цифры на сервере. Сброс: каждый день в 7:00, неделя — в понедельник 7:00
 const MISSIONS = {
-  day: { login:{need:1,pts:10,give:{tok:5}}, orders:{need:10,pts:20,give:{tok:10,jars:1}}, merges:{need:30,pts:20,give:{tok:10}}, gens:{need:40,pts:15,give:{tok:5,coins:30}},
-         chests:{need:2,pts:15,give:{jars:1}}, build:{need:1,pts:20,give:{tok:10}}, goal:{need:1,pts:15,give:{tok:5}}, shop:{need:1,pts:10,give:{tok:5}}, help:{need:1,pts:10,give:{tok:5}} },
+  day: { login:{need:1,pts:15,give:{tok:5}}, orders:{need:10,pts:20,give:{tok:10,jars:1}}, merges:{need:30,pts:20,give:{tok:10}}, gens:{need:40,pts:15,give:{tok:5,coins:30}},
+         chests:{need:2,pts:15,give:{jars:1}}, build:{need:1,pts:20,give:{tok:10}}, goal:{need:1,pts:15,give:{tok:5}}, shop:{need:1,pts:15,give:{tok:5}}, help:{need:1,pts:15,give:{tok:5}} },
   week:{ login:{need:5,pts:30,give:{tok:30}}, orders:{need:70,pts:30,give:{tok:30,jars:3}}, merges:{need:200,pts:20,give:{tok:20}}, chests:{need:10,pts:20,give:{jars:3}},
          built:{need:3,pts:30,give:{tok:30}}, goal:{need:10,pts:20,give:{tok:20}}, herolv:{need:2,pts:30,give:{tok:20,coins:200}} },
 };
@@ -394,7 +404,7 @@ const costumeList = h => LOOKS[h].filter(x => !(x[3]==='hair' || x[2]===0));
 function setStage(h){ const sets = GEAR_SETS[h]||[], g = (S.gear&&S.gear[h])||[]; let best = null; for(const st of sets) if(st[1].every(x=>g.includes(x))) best = st; return best; }
 function curHair(h){ const H = S && S.heroes[h], x = H && H.hair; return x && isHair(h,x) && ownsLook(h,x) ? x : LOOKS[h][0][0]; }
 function setLook(h){ const st = setStage(h); return st ? setImg(curHair(h), st[2]) : null; }
-function curLook(h){ const H = S && S.heroes[h]; const chosen = H && H.look; if(chosen && chosen !== 'auto' && !isHair(h,chosen) && ownsLook(h, chosen)) return chosen; return setLook(h) || curHair(h); }
+function curLook(h){ if(isFem(h)) return FEM[h]; const H = S && S.heroes[h]; const chosen = H && H.look; if(chosen && chosen !== 'auto' && !isHair(h,chosen) && ownsLook(h, chosen)) return chosen; return setLook(h) || curHair(h); }
 function ownsLook(h,id){ const L = LOOKS[h].find(x=>x[0]===id); if(!L) return false; const H = S && S.heroes[h]; return L[2]===0 || (S.paidLooks||[]).includes(id) || (isHair(h,id) && !!H && heroLv(h) >= hairLevel(h,id)); }
 function gearBonus(h){ const g = (S.gear&&S.gear[h])||[]; let b = 0; for(const it of (GEAR[h]||[])) if(g.includes(it[0])) b += it[4]; if(setLook(h)) b += SET_BONUS; return b; }
 const AVATARS = ['m0','m1','m2','m3','f0','f1','f2','f3'];
@@ -567,7 +577,7 @@ function freshBoard(first){
   return b;
 }
 function firstHeroState(o){
-  const H = {lv:1, xp:0}, L = o.look && LOOKS[o.hero].find(x => x[0]===o.look);
+  const H = {lv:1, xp:0}; if(o.sex==='f' && FEM[o.hero]) H.sex = 'f';
   return H;
 }
 function newState(o){
@@ -576,6 +586,57 @@ function newState(o){
     coins:20, xp:0, level:1, energy:CONFIG.ENERGY_MAX, eTs:now(), board:freshBoard(o.hero), orders:[], story:{}, gen:{}, upg:{},
     goals:{ picked:[], day:'', done:{}, week:-1 }, wardrobe:{ owned:[], wear:{} }, chestsTaken:0, tut:0, stats:{orders:0, merges:0} };
 }
+/* ---------- подсказки-обучение: затемнение, подсвеченный элемент и пояснение Шефа ---------- */
+const TIPS = {
+  kitchen: [
+    ['#orders', 'Заказы соседей', 'Каждый герой просит своё блюдо. Собери нужные продукты — и нажми «Отдать». За заказ: монеты, опыт и уровень героя.'],
+    ['#bw', 'Кухня', 'Перетаскивай одинаковые продукты друг на друга — получится продукт уровнем выше. Так собираются блюда для заказов.'],
+    ['#shelf', 'Генераторы', 'Нажми на генератор — он даст продукт. Каждое нажатие тратит энергию ⚡: обычно 1, удочка 2, корзина Шефа 5.'],
+    ['[data-energy]', 'Энергия', 'Восстанавливается сама: +1 каждые 5 минут. Нажми сюда — тут бесплатная энергия 2 раза в день и банки.'],
+    ['.lvl', 'Твой уровень', 'Растёт от заказов. С уровнями открываются новые места на улице, герои и команды.'],
+    ['.nav [data-v="goals"]', 'Задания', 'Миссии дня и недели: выполняй — получай жетоны, банки и сундуки. Красная точка — есть что забрать.'],
+    ['.nav [data-v="home"]', 'Двор', 'На монеты отстраивай улицу: дом, двор, спортплощадку, кафе, парк и рынок. Загляни туда, когда накопишь монет.'],
+  ],
+  home: [
+    ['.street', 'Твоя улица', 'Отделывай места по очереди. Новые места открываются с уровнями. Полностью отделанное место даёт +3% монет навсегда.'],
+    ['.spot', 'Место', 'Нажми на место, чтобы зайти. Внутри кнопка «Стройка»: выбираешь, что построить. Строится по таймеру — бот напишет, когда готово.'],
+  ],
+  place: [
+    ['[data-open="repair"]', 'Стройка', 'Здесь список построек этого места. Одновременно строится одна вещь на всей улице. Друзья могут ускорить стройку.'],
+    ['.roombar .back', 'Назад на улицу', 'Эта стрелка возвращает на улицу.'],
+  ],
+  heroes: [
+    ['.team', 'Команды', 'Заказы на кухне дают только герои в командах. Нажми на героя — откроется его карточка, на «+» — выбор героя.'],
+    ['[data-htab="all"]', 'Коллекция', 'Все герои. Новых собирай из осколков — они падают из сундуков. В карточке героя: экипировка, образы, звёзды и имя.'],
+  ],
+  goals: [
+    ['.mtop', 'Миссии', 'Выполняй миссии — получай очки ⭐. Набрал очков — открывай сундук на шкале. Всё обновляется каждый день в 7:00.'],
+    ['[data-ttab="mine"]', 'Цели для себя', 'Маленькие дела в жизни: вода, прогулка, сон. Отметил — получил энергию.'],
+  ],
+  shop: [
+    ['.tabs', 'Лавка Шефа', 'За звёзды — наборы. «Ежедневно» и «Монеты» — покупки за монеты с лимитами. «Жетоны» — за жетоны из миссий.'],
+  ],
+};
+let coachQ = [], coachEl = null;
+function tipsKey(){ return view==='home' ? (curPlace ? 'place' : 'home') : view; }
+function maybeTips(){
+  if(!S || coachEl || !bg.hidden || window.__noTips) return; S.tips = S.tips || [];
+  const k = tipsKey(); if(S.tips.includes(k) || !TIPS[k]) return;
+  S.tips.push(k); markDirty();
+  coachQ = TIPS[k].filter(t => document.querySelector(t[0])); showTip();
+}
+function showTip(){
+  if(coachEl){ coachEl.remove(); coachEl = null; }
+  const t = coachQ.shift(); if(!t) return;
+  const el = document.querySelector(t[0]); if(!el){ showTip(); return; }
+  const r = el.getBoundingClientRect(), pad = 6, below = r.top + r.height/2 < innerHeight/2;
+  coachEl = document.createElement('div'); coachEl.className = 'coach';
+  coachEl.innerHTML = `<div class="hole" style="left:${r.left-pad}px;top:${r.top-pad}px;width:${r.width+pad*2}px;height:${r.height+pad*2}px"></div>
+    <div class="tip" style="${below ? 'top:'+Math.min(innerHeight-170, r.bottom+14)+'px' : 'bottom:'+Math.min(innerHeight-170, innerHeight-r.top+14)+'px'}">${ic('heroes/looks/chef_a_face','👨‍🍳')}<div><b>${t[1]}</b><p>${t[2]}</p><small>${coachQ.length ? 'Нажми, чтобы дальше' : 'Нажми, чтобы закрыть'}</small></div></div>`;
+  coachEl.addEventListener('click', e => { e.stopPropagation(); showTip(); }, true);
+  document.body.appendChild(coachEl);
+}
+
 /* ---------- миссии ---------- */
 function ensureMis(){
   if(!S) return; const d = misDay(), w = misWeek(); const m = S.mis = S.mis || {};
@@ -599,7 +660,7 @@ function giveReward(g){ const got = [];
 function giveText(g){ const a = []; if(g.tok) a.push(g.tok+' 🎫'); if(g.jars) a.push(g.jars+' 🥫'); if(g.coins) a.push(g.coins+' 🪙'); if(g.chests) a.push(g.chests+' 🎁'); if(g.shards) a.push(g.shards+' 🧩'); return a.join(', '); }
 function rewChips(g){ const a = []; if(g.tok) a.push(`<span class="rw">🎫<i>${g.tok}</i></span>`); if(g.jars) a.push(`<span class="rw">${ic('sp/jar','🥫')}<i>${g.jars}</i></span>`);
   if(g.coins) a.push(`<span class="rw">${ic('sp/coin','🪙')}<i>${g.coins}</i></span>`); if(g.chests) a.push(`<span class="rw">${ic('sp/chest','🎁')}<i>${g.chests}</i></span>`); if(g.shards) a.push(`<span class="rw">🧩<i>${g.shards}</i></span>`); return a.join(''); }
-const hn = id => (S && S.heroes && S.heroes[id] && S.heroes[id].name) || HEROES[id].n;
+const hn = id => (S && S.heroes && S.heroes[id] && S.heroes[id].name) || (isFem(id) ? FEM_NAME[id] : HEROES[id].n);
 
 function normalize(){
   S.heroes = S.heroes||{}; S.upg = S.upg||{}; S.gen = S.gen||{}; S.story = S.story||{}; S.orders = S.orders||[];
@@ -825,6 +886,7 @@ function render(){
   app.innerHTML = hud() + `<div class="screen" id="screen" data-v="${view+(curPlace||'')}">${body}</div>` + navHtml();
   if(keep){ const np = $('screen').querySelector('.panel'); if(np) np.scrollTop = keep; else $('screen').scrollTop = keep; }
   if(view==='kitchen') mountKitchen();
+  setTimeout(maybeTips, 350);
 }
 
 /* ---------- кухня ---------- */
@@ -989,6 +1051,7 @@ function wardrobeHtml(){
   return `<p>Твои вещи сохранены. Надевать их можно будет в следующем обновлении.</p><div>${own.map(k=>`<span class="chip">👕 ${esc(name(k))}</span>`).join('')}</div>`;
 }
 function looksHtml(h){
+  if(isFem(h)) return '<p>Новые внешности и костюмы для неё уже рисуются — скоро появятся здесь.</p>';
   const cur = curLook(h), hair = curHair(h), sl = setLook(h), HL = hairList(h), lv = heroLv(h);
   let out = '';
   if(HL.length > 1){
@@ -1344,21 +1407,23 @@ let ob = { step:0, avatar:null, name:'', hero:null, look:null, bday:null };
 function onboarding(imported){
   const app = $('app');
   const suggested = imported && imported.pet ? ({trainer:'trainer',office:'office',cat:'cat',lifter:'lifter',powerlifter:'lifter',lifterf:'lifter'})[imported.pet.type] : null;
-  if(suggested && !ob.hero) ob.hero = suggested;
+  if(suggested && !ob.hero){ ob.hero = suggested; if(FEM[suggested] && (imported.pet.sex==='f' || imported.pet.type==='lifterf')) ob.sex = 'f'; }
   if(!ob.name) ob.name = (ME.first_name||'').slice(0,20);
   let body = '';
   if(ob.step===0) body = `<div class="panel" style="text-align:center;align-items:center;justify-content:center"><div class="logo">Yard Stars</div>
       <div class="big" style="width:120px">${ic('heroes/looks/chef_a_face','👨‍🍳')}</div>
       <p style="font-size:16px;color:var(--ink)">Привет! Я Шеф. Добро пожаловать во двор!</p>
-      <p>Здесь ты готовишь вкусное для соседей, ремонтируешь дом и собираешь команду героев. Никто не умирает и не требует внимания каждую минуту.</p>
+      <p>Здесь ты готовишь вкусное для соседей, отстраиваешь улицу и собираешь команду героев.</p>
       ${imported?'<p style="color:var(--ok)"><b>Твои монеты и наряды из «Береги его» уже переехали с тобой 🎉</b></p>':''}
       <button class="btn b-go" data-ob="next">Начать</button></div>`;
   else if(ob.step===1) body = `<div class="panel"><h2>Кто ты во дворе?</h2><p>Выбери свой портрет. Его увидят соседи.</p>
       <div class="grid4">${AVATARS.map(a=>`<button class="card${ob.avatar===a?' pick':''}" data-ava="${a}">${avaIc(a)}</button>`).join('')}</div>
       <label for="obName"><b style="color:var(--wood)">Как тебя зовут?</b></label><input id="obName" maxlength="20" value="${esc(ob.name)}" placeholder="Имя">
       <button class="btn b-go" data-ob="next" ${ob.avatar?'':'disabled'}>Дальше</button></div>`;
-  else if(ob.step===2) body = `<div class="panel"><h2>Твой первый сосед</h2><p>Он будет давать заказы с первого дня. Остальные придут с уровнями.</p>
-      <div class="grid2">${STARTERS.map(h=>`<button class="card${ob.hero===h?' pick':''}" data-obhero="${h}">${lookFace(h, LOOKS[h][0][0])}<b>${hn(h)}</b><span>${esc(HEROES[h].line)}</span></button>`).join('')}</div>
+  else if(ob.step===2) body = `<div class="panel"><h2>Твой главный герой</h2><p>Выбери любого — он будет с тобой с первого дня. Остальные присоединятся позже.</p>
+      ${ob.hero && FEM[ob.hero] ? `<b style="color:var(--wood)">Мужчина или женщина?</b><div class="grid2"><button class="card${ob.sex!=='f'?' pick':''}" data-obsex="m">${lookFace(ob.hero, LOOKS[ob.hero][0][0])}<b>${HEROES[ob.hero].n}</b><span>мужчина</span></button><button class="card${ob.sex==='f'?' pick':''}" data-obsex="f">${lookFace(ob.hero, FEM[ob.hero])}<b>${FEM_NAME[ob.hero]}</b><span>женщина</span></button></div>` : ''}
+      <div class="grid2 g3">${HERO_IDS.map(h=>`<button class="card${ob.hero===h?' pick':''}" data-obhero="${h}">${lookFace(h, ob.hero===h && ob.sex==='f' && FEM[h] ? FEM[h] : LOOKS[h][0][0])}<b style="font-size:13px">${ob.hero===h && ob.sex==='f' && FEM[h] ? FEM_NAME[h] : HEROES[h].n}</b></button>`).join('')}</div>
+      ${ob.hero ? `<p>«${esc(HEROES[ob.hero].line)}»</p>` : ''}
       ${suggested?`<p style="color:var(--ok)">Твой питомец «${esc(imported.pet.name||'')}» переехал с тобой.</p>`:''}
       <button class="btn b-go" data-ob="next" ${ob.hero?'':'disabled'}>Дальше</button></div>`;
   else if(ob.step===3) body = `<div class="panel"><h2>Когда у тебя день рождения?</h2><p>В этот день во дворе тебя ждёт подарок, которого нет ни у кого. Можно пропустить.</p>
@@ -1371,7 +1436,8 @@ document.addEventListener('click', e => {
   if(S) return; const t = e.target.closest('button'); if(!t) return; const ds = t.dataset;
   const nm = $('obName'); if(nm) ob.name = nm.value.trim().slice(0,20);
   if(ds.ava){ ob.avatar = ds.ava; onboarding(window._imp); return; }
-  if(ds.obhero){ if(ob.hero!==ds.obhero) ob.look = null; ob.hero = ds.obhero; onboarding(window._imp); return; }
+  if(ds.obhero){ if(ob.hero!==ds.obhero){ ob.look = null; ob.sex = 'm'; } ob.hero = ds.obhero; onboarding(window._imp); return; }
+  if(ds.obsex){ ob.sex = ds.obsex; onboarding(window._imp); return; }
   if(ds.ob==='next'){ ob.step++; onboarding(window._imp); return; }
   if(ds.ob==='finish' || ds.ob==='skip'){
     if(ds.ob==='finish'){ const d=$('bdD').value, m=$('bdM').value; if(d&&m) ob.bday = m+'-'+d; }

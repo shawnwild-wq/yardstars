@@ -217,15 +217,15 @@ export const WSHOP = { coins: 300, lim: 3, heroes: 3 };
 // give: tok = жетоны соседа, jars, coins. pts = activity points toward the chests.
 export const MISSIONS = {
   day: {
-    login:  { need: 1,  pts: 10, give: { tok: 5 } },
+    login:  { need: 1,  pts: 15, give: { tok: 5 } },
     orders: { need: 10, pts: 20, give: { tok: 10, jars: 1 } },
     merges: { need: 30, pts: 20, give: { tok: 10 } },
     gens:   { need: 40, pts: 15, give: { tok: 5, coins: 30 } },
     chests: { need: 2,  pts: 15, give: { jars: 1 } },
     build:  { need: 1,  pts: 20, give: { tok: 10 } },
     goal:   { need: 1,  pts: 15, give: { tok: 5 } },
-    shop:   { need: 1,  pts: 10, give: { tok: 5 } },
-    help:   { need: 1,  pts: 10, give: { tok: 5 } },
+    shop:   { need: 1,  pts: 15, give: { tok: 5 } },
+    help:   { need: 1,  pts: 15, give: { tok: 5 } },
   },
   week: {
     login:  { need: 5,   pts: 30, give: { tok: 30 } },

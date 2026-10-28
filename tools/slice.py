@@ -47,6 +47,10 @@ SHEETS = {
     'h_yoga':      dict(n=2, bodies=['yoga_a', 'yoga_b']),
     'h_dog':       dict(n=2, bodies=[None, 'dog_a']),
     'h_hamster':   dict(n=2, bodies=[None, 'hamster_a']),
+    # female versions of heroes: one figure per sheet
+    'f_lifter':  dict(n=1, bodies=['lf_f']),
+    'f_trainer': dict(n=1, bodies=['tf_f']),
+    'f_office':  dict(n=1, bodies=['of_f']),
     # extra appearances: first figure repeats the base and is skipped
     'v_strongman': dict(n=3, bodies=[None, 'strongman_h1', 'strongman_h2']),
     'v_muaythai': dict(n=3, bodies=[None, 'muaythai_h1', 'muaythai_h2']),

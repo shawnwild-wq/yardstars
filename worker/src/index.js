@@ -123,8 +123,10 @@ export function sanitize(prev, next, now, prevSavedAt) {
     out.energy = Math.min(Number(out.energy) || ECON.ENERGY_MAX, ECON.ENERGY_MAX + 20);
     out.eTs = Math.min(Number(out.eTs) || now, now);
     out.upg = {};
-    const hs = Object.keys(out.heroes || {}).filter((h) => STARTERS.includes(h)).slice(0, 1);
-    out.heroes = Object.fromEntries(hs.map((h) => [h, { lv: 1, xp: 0 }]));
+    // the main hero: any hero, male or female version
+    const hs = Object.keys(out.heroes || {}).filter((h) => HEROES[h]).slice(0, 1);
+    out.heroes = Object.fromEntries(hs.map((h) => [h, out.heroes[h] && out.heroes[h].sex === 'f' ? { lv: 1, xp: 0, sex: 'f' } : { lv: 1, xp: 0 }]));
+    out.firstHero = hs[0];
     out.teams = [hs, [], [], []]; out.gear = {}; out.shards = {}; out.jars = 0;
     for (const f of SERVER_FIELDS) delete out[f];
     delete out.freeLeft; delete out.dshop; delete out.wshop; delete out.mis; out.tok = 0;
@@ -237,7 +239,7 @@ export function sanitize(prev, next, now, prevSavedAt) {
     if (heroes[h] || !HEROES[h]) continue;
     const starter = HEROES[h] === 'starter';
     if (starter && count((x) => HEROES[x] === 'starter') < gifts) heroes[h] = { lv: 1, xp: 0, ...nh[h] };
-    else if (!starter && count((x) => HEROES[x] !== 'starter' && !paidH.has(x)) < shardCap) heroes[h] = { lv: 1, xp: 0, ...nh[h] };
+    else if (!starter && count((x) => HEROES[x] !== 'starter' && !paidH.has(x) && x !== prev.firstHero) < shardCap) heroes[h] = { lv: 1, xp: 0, ...nh[h] };
   }
   // looks: free ones or bought ones; 'auto' = gear-set look decided by the game
   const paidL = new Set(prev.paidLooks || []);
@@ -247,6 +249,7 @@ export function sanitize(prev, next, now, prevSavedAt) {
     const plv = Number(P.lv) || 1;
     H.lv = Math.max(plv, Math.min(Number(H.lv) || 1, plv + 1, HERO_MAX_LEVEL));
     delete H.freeHair;
+    if (P.sex === 'f') H.sex = 'f'; else delete H.sex;   // chosen once at the start
     if (H.name !== undefined) { const nmv = String(H.name).replace(/[<>\n\r\t]/g, '').trim().slice(0, 16); if (nmv) H.name = nmv; else delete H.name; }
     // stars: +1 per save at most, capped by player level
     const ps = Number(P.stars) || 0;
@@ -680,6 +683,16 @@ async function onMessage(env, m, now) {
       await env.DB.prepare('UPDATE players SET state=?, rev=rev+1 WHERE uid=?').bind(JSON.stringify(st), target).run();
       await tg(env, 'sendMessage', { chat_id: target, text: '🎁 Подарок от Yard Stars: ' + (got.join(', ') || 'сюрприз') + '!\nСпасибо, что ты с нами с самого начала 💛', reply_markup: playButton(env, 'Забрать ▶️') });
       return tg(env, 'sendMessage', { chat_id: uid, text: 'Готово: ' + (got.join(', ') || 'ничего') + ' → id ' + target });
+    }
+    if (cmd === '/sbros') {
+      const target = Number(rest[0]); const p = target && await getPlayer(env, target);
+      if (!p || !p.state) return tg(env, 'sendMessage', { chat_id: uid, text: 'Напиши так: /sbros id — игрок начнёт заново и выберет героя. id ищи через /igrok Имя' });
+      await env.DB.batch([
+        env.DB.prepare('UPDATE players SET state=NULL, rev=rev+1 WHERE uid=?').bind(target),
+        env.DB.prepare('UPDATE imports SET applied=0 WHERE uid=?').bind(target),
+      ]);
+      await tg(env, 'sendMessage', { chat_id: target, text: '✨ Можно выбрать главного героя заново — теперь есть и мужские, и женские версии! Закрой игру, если она открыта, и открой снова.', reply_markup: playButton(env, 'Выбрать героя ▶️') });
+      return tg(env, 'sendMessage', { chat_id: uid, text: 'Готово: id ' + target + ' начнёт заново (монеты и вещи из старой игры вернутся). Подарок /podarok — после того как выберет героя.' });
     }
     if (cmd === '/refund') {
       const [u, charge] = rest;

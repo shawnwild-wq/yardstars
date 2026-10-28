@@ -251,6 +251,30 @@ Date.now = realNow;
   r = await call('/api/load', { initData: I }); assert.equal(r.data.state.heroes.lifter.hair, 'l_hairbeard'); ok('appearance bought before its level is worn');
 }
 
+// missions: the last activity chest is reachable
+{
+  const { MISSIONS, MISSION_BOXES } = await import('../src/config.js');
+  for (const k of ['day', 'week']) assert.ok(Object.values(MISSIONS[k]).reduce((a, x) => a + x.pts, 0) >= MISSION_BOXES[k].at(-1).at, k);
+  ok('all missions give enough points for the last chest');
+}
+
+// main hero: any hero, female version kept, sex cannot change later
+{
+  const U = { id: 6106, first_name: 'Даша' }, I = await initData(U, env.BOT_TOKEN);
+  await call('/api/load', { initData: I });
+  let r = await call('/api/save', { initData: I, rev: 0, state: { owner: { avatar: 'f2' }, firstHero: 'lifter', heroes: { lifter: { lv: 1, sex: 'f' } }, coins: 20, level: 1, energy: 100, eTs: Date.now() } });
+  const row = () => env.DB.prepare('SELECT state, rev FROM players WHERE uid=6106').first();
+  let p = await row(), st = JSON.parse(p.state);
+  assert.equal(st.heroes.lifter.sex, 'f'); ok('female main hero saved');
+  st.heroes.lifter.sex = 'm'; r = await call('/api/save', { initData: I, rev: p.rev, state: st });
+  assert.equal(JSON.parse((await row()).state).heroes.lifter.sex, 'f'); ok('hero sex is chosen once');
+  const U2 = { id: 6107, first_name: 'Ян' }, I2 = await initData(U2, env.BOT_TOKEN);
+  await call('/api/load', { initData: I2 });
+  await call('/api/save', { initData: I2, rev: 0, state: { owner: { avatar: 'm1' }, firstHero: 'hamster', heroes: { hamster: { lv: 1 } }, teams: [['hamster'], [], [], []], coins: 20, level: 1, energy: 100, eTs: Date.now() } });
+  const s2 = JSON.parse((await env.DB.prepare('SELECT state FROM players WHERE uid=6107').first()).state);
+  assert.ok(s2.heroes.hamster && s2.teams[0][0] === 'hamster'); ok('any hero can be the main one');
+}
+
 // energy jars and hero skills
 {
   const U = { id: 6006, first_name: 'Банка' }, I = await initData(U, env.BOT_TOKEN);
