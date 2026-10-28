@@ -164,6 +164,9 @@ await shot('11d-pick'); await click('[data-x]');
 await click('[data-htab="all"]');
 await page.evaluate(() => { S.coins += 500; S.heroes.cat.lv = 10; });
 await click('.card[data-hero="cat"]'); await shot('12-hero-sheet');
+await page.fill('#hname', 'Барсик'); await click('[data-hname="cat"]');
+const nm = await page.evaluate(() => ({ n: S.heroes.cat.name, t: document.querySelector('.hc-top h2').textContent }));
+if (nm.n !== 'Барсик' || nm.t !== 'Барсик') errors.push('hero name ' + JSON.stringify(nm)); else console.log('hero named');
 await click('[data-gear="cat:collar"]');
 const g = await page.evaluate(() => ({ gear: S.gear.cat, bonus: gearBonus('cat') }));
 if (!g.gear || !g.gear.includes('collar')) errors.push('gear buy failed'); else console.log('gear bought, bonus', g.bonus);
@@ -216,13 +219,31 @@ if (Math.abs(sk.ms - 250000) > 1) errors.push('regen skill ' + JSON.stringify(sk
 await page.evaluate(() => { delete S.heroes.lifter; delete S.gear.lifter; render(); });
 
 // goals
-await click('.nav [data-v="goals"]');
+await click('.nav [data-v="goals"]'); await shot('13a-missions-day');
+await click('[data-ttab="mine"]');
 for (const g of ['water', 'move', 'sleep']) await click(`[data-gp="${g}"]`);
 await shot('13-goals-pick'); await click('[data-goalsave]');
 const e0 = await page.evaluate(() => S.energy);
 await click('[data-gd="water"]'); await click('[data-gd="move"]'); await click('[data-gd="sleep"]');
 const e1 = await page.evaluate(() => S.energy);
 if (e1 - e0 !== 30) errors.push('goals energy ' + (e1 - e0)); await shot('14-goals-done');
+// missions: counters from play, claim, activity chest
+await click('[data-ttab="day"]');
+const ms = await page.evaluate(() => ({ goal: S.mis.c.goal, login: S.mis.c.login, merges: S.mis.c.merges||0 }));
+if (ms.goal !== 3 || ms.login !== 1) errors.push('mission counters ' + JSON.stringify(ms)); else console.log('mission counters', JSON.stringify(ms));
+const tk0 = await page.evaluate(() => S.tok||0);
+await click('[data-mclaim="day:login"]'); await click('[data-mclaim="day:goal"]');
+const tk1 = await page.evaluate(() => ({ tok: S.tok, pts: misPts('day') }));
+if (tk1.tok !== tk0 + 10 || tk1.pts !== 25) errors.push('mission claim ' + JSON.stringify(tk1)); else console.log('missions claimed', JSON.stringify(tk1));
+const j0m = await page.evaluate(() => S.jars||0);
+await click('[data-mbox="day:0"]');
+const j1m = await page.evaluate(() => ({ jars: S.jars, bx: S.mis.bx }));
+if (j1m.jars !== j0m + 2) errors.push('activity chest ' + JSON.stringify(j1m)); else console.log('activity chest 20 opened');
+await shot('14b-missions-claimed');
+await click('[data-ttab="week"]'); await shot('14c-missions-week');
+await page.waitForTimeout(3200);
+const srvm = JSON.parse(env.DB.db.prepare('SELECT state FROM players WHERE uid=1001').get().state);
+if (!srvm.mis || !srvm.mis.ok.includes('login') || srvm.tok !== tk1.tok) errors.push('server missions ' + JSON.stringify({ mis: srvm.mis, tok: srvm.tok })); else console.log('server accepted missions and tokens');
 
 // shop + paid flow
 await click('.nav [data-v="shop"]'); await shot('15-shop');
@@ -264,6 +285,11 @@ const j1 = await page.evaluate(() => ({ jars: S.jars, left: S.dshop.jar, coins: 
 if (j1.jars !== j0 + 1 || j1.left !== 2) errors.push('daily jar ' + JSON.stringify(j1)); else console.log('daily shop jar bought');
 await click('[data-stab="coins"]'); await shot('20-shop-coins');
 await click('[data-stab="stars"]'); await shot('21-shop-stars');
+await page.evaluate(() => { S.tok = 100; render(); });
+await click('[data-stab="tok"]'); await shot('22-shop-tokens');
+const jt = await page.evaluate(() => S.jars);
+const jt2 = await page.evaluate(() => { S.tok = 100; document.querySelector('[data-tbuy="jar"]').click(); return { j: S.jars, t: S.tok }; });
+if (jt2.j !== jt + 1 || jt2.t !== 85) errors.push('token shop ' + JSON.stringify(jt2)); else console.log('token shop jar bought');
 await page.waitForTimeout(3200);
 const srv3 = JSON.parse(env.DB.db.prepare('SELECT state FROM players WHERE uid=1001').get().state);
 if (srv3.freeLeft !== 1 || srv3.dshop.jar !== 2) errors.push('server free/shop ' + JSON.stringify({ f: srv3.freeLeft, d: srv3.dshop })); else console.log('server accepted free claim and daily purchase');

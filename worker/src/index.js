@@ -1,6 +1,6 @@
 // Yard Stars — Cloudflare Worker: game API, Telegram bot, Stars payments, notifications.
 import { ECON, REPAIRS, REPAIR_NAMES, SKUS, HEROES, HERO_PRICE, HERO_NAMES, GIFT_LEVELS, SHARD_HEROES_PER_LEVELS, TEAM_OPEN, TEAM_SIZE,
-  speedPrice, LOOKS, LOOK_NAMES, lookInfo, GEAR_STARS, HAIR, HAIR_LEVELS, costumeLevel, HERO_MAX_LEVEL, JAR_ENERGY, DAILY_JARS, SERVER_SKILLS, STAR_COST, STAR_SKILL, STARS_PER_LEVELS, HELPS, PLACE_OF, PLACE_JARS, FREE_ENERGY, FREE_PER_DAY, DSHOP, WSHOP } from './config.js';
+  speedPrice, LOOKS, LOOK_NAMES, lookInfo, GEAR_STARS, HAIR, HAIR_LEVELS, costumeLevel, HERO_MAX_LEVEL, JAR_ENERGY, DAILY_JARS, SERVER_SKILLS, STAR_COST, STAR_SKILL, STARS_PER_LEVELS, HELPS, PLACE_OF, PLACE_JARS, FREE_ENERGY, FREE_PER_DAY, DSHOP, WSHOP, MISSIONS, MISSION_BOXES, TSHOP } from './config.js';
 
 const DAY = 24 * 3600 * 1000;
 const HOUR = 3600 * 1000;
@@ -127,7 +127,7 @@ export function sanitize(prev, next, now, prevSavedAt) {
     out.heroes = Object.fromEntries(hs.map((h) => [h, { lv: 1, xp: 0 }]));
     out.teams = [hs, [], [], []]; out.gear = {}; out.shards = {}; out.jars = 0;
     for (const f of SERVER_FIELDS) delete out[f];
-    delete out.freeLeft; delete out.dshop; delete out.wshop;
+    delete out.freeLeft; delete out.dshop; delete out.wshop; delete out.mis; out.tok = 0;
     out.createdAt = now;
     return out;
   }
@@ -138,9 +138,14 @@ export function sanitize(prev, next, now, prevSavedAt) {
   out.level = Math.max(pl, Math.min(Number(out.level) || pl, pl + 3));
   const levelGain = out.level - pl;
 
+  // missions: claimed missions and activity chests give rewards once per day / week
+  const mres = missionRewards(prev.mis, out.mis, now);
+  if (mres.mis) out.mis = mres.mis; else delete out.mis;
+  const mg = mres.give;
+
   // coins
   const mins = Math.max(0, (now - (prevSavedAt || now)) / 60000);
-  const maxCoins = (Number(prev.coins) || 0) + ECON.COIN_EARN_SLACK + mins * ECON.COIN_EARN_PER_MIN;
+  const maxCoins = (Number(prev.coins) || 0) + ECON.COIN_EARN_SLACK + mins * ECON.COIN_EARN_PER_MIN + mg.coins;
   out.coins = Math.max(0, Math.min(Math.floor(Number(out.coins) || 0), Math.floor(maxCoins)));
 
   // daily goals: at most 3 done per day
@@ -170,10 +175,15 @@ export function sanitize(prev, next, now, prevSavedAt) {
   } else delete out.wshop;
   if (spent) out.coins = Math.max(0, Math.min(out.coins, Math.floor(maxCoins - spent)));
 
+  // жетоны соседа: earned from missions, spent in the token shop (jars bought with them are allowed)
+  const ptok = Math.max(0, Number(prev.tok) || 0) + mg.tok;
+  out.tok = Math.max(0, Math.min(Math.floor(Number(out.tok) || 0), ptok));
+  const tokJars = Math.floor((ptok - out.tok) / TSHOP.jar);
+
   // energy
   const { e } = regenEnergy(prev, now);
-  // jars: only the server adds them (or the daily shop); the game can only open (spend) them
-  const pj = Math.max(0, Number(prev.jars) || 0) + jarBought;
+  // jars: only the server adds them (daily gift, shops, missions); the game can only open (spend) them
+  const pj = Math.max(0, Number(prev.jars) || 0) + jarBought + mg.jars + tokJars;
   out.jars = Math.max(0, Math.min(Math.floor(Number(out.jars) || 0), pj));
   const upper = e + freeUsed * FREE_ENERGY + (pj - out.jars) * JAR_ENERGY + goalsGain * (ECON.GOAL_ENERGY + Math.floor(skillVal(prev, 'goalE')))
     + levelGain * (ECON.LEVEL_ENERGY + Math.floor(skillVal(prev, 'levelE'))) + 2;
@@ -237,6 +247,7 @@ export function sanitize(prev, next, now, prevSavedAt) {
     const plv = Number(P.lv) || 1;
     H.lv = Math.max(plv, Math.min(Number(H.lv) || 1, plv + 1, HERO_MAX_LEVEL));
     delete H.freeHair;
+    if (H.name !== undefined) { const nmv = String(H.name).replace(/[<>\n\r\t]/g, '').trim().slice(0, 16); if (nmv) H.name = nmv; else delete H.name; }
     // stars: +1 per save at most, capped by player level
     const ps = Number(P.stars) || 0;
     H.stars = Math.max(ps, Math.min(Number(H.stars) || 0, ps + 1, 5, Math.floor((Number(out.level) || 1) / STARS_PER_LEVELS)));
@@ -420,6 +431,33 @@ async function apiAuth(env, body) {
   return user;
 }
 
+// missions: day = local date shifted by 7 h ("YYYY-MM-DD"), week = that day's Monday
+const plausible = (d, now, slackDays) => { const t = Date.parse(d + 'T00:00:00Z'); return /^\d{4}-\d{2}-\d{2}$/.test(d || '') && Number.isFinite(t) && Math.abs(t - now) <= slackDays * 86400000; };
+function claimSide(kind, pd, pok, pbx, nd, nok, nbx, now, slack) {
+  const M = MISSIONS[kind], B = MISSION_BOXES[kind];
+  const valid = (a) => [...new Set(Array.isArray(a) ? a : [])];
+  let base = { d: pd, ok: valid(pok).filter((id) => M[id]), bx: valid(pbx).filter((i) => B[i]) };
+  if (nd && nd !== pd && plausible(nd, now, slack) && (!pd || nd > pd)) base = { d: nd, ok: [], bx: [] };
+  if (!base.d || nd !== base.d) return { side: base, give: [] };
+  const ok = [...new Set([...base.ok, ...valid(nok).filter((id) => M[id])])];
+  const pts = ok.reduce((a, id) => a + M[id].pts, 0);
+  const bx = [...new Set([...base.bx, ...valid(nbx).filter((i) => B[i] && B[i].at <= pts)])];
+  const give = [...ok.filter((id) => !base.ok.includes(id)).map((id) => M[id].give), ...bx.filter((i) => !base.bx.includes(i)).map((i) => B[i].give)];
+  return { side: { d: base.d, ok, bx }, give };
+}
+function missionRewards(pm, nm, now) {
+  const z = { tok: 0, jars: 0, coins: 0 };
+  if (!nm || typeof nm !== 'object') return { mis: pm, give: z };
+  pm = pm || {};
+  const D = claimSide('day', pm.d, pm.ok, pm.bx, nm.d, nm.ok, nm.bx, now, 1.5);
+  const W = claimSide('week', pm.w, pm.wok, pm.wbx, nm.w, nm.wok, nm.wbx, now, 8);
+  for (const g of [...D.give, ...W.give]) { z.tok += g.tok || 0; z.jars += g.jars || 0; z.coins += g.coins || 0; }
+  const keep = { d: D.side.d, ok: D.side.ok, bx: D.side.bx, w: W.side.d, wok: W.side.ok, wbx: W.side.bx };
+  keep.c = nm.c && typeof nm.c === 'object' && nm.d === keep.d ? nm.c : {};
+  keep.wc = nm.wc && typeof nm.wc === 'object' && nm.w === keep.w ? nm.wc : {};
+  return { mis: keep, give: z };
+}
+
 // week number (Monday-based) and the heroes on sale that week
 function weekOf(t) { return Math.floor((t / 86400000 + 3) / 7); }
 function weekHeroes(week) {
@@ -494,7 +532,7 @@ async function apiSave(env, body, now) {
   await env.DB.prepare('UPDATE players SET state=?, rev=?, last_seen=? WHERE uid=?').bind(JSON.stringify(st), rev, now, user.id).run();
   await rescheduleAlerts(env, user.id, st, now);
   // tell the client only what the server corrected
-  return json(env, { ok: true, rev, now, fix: { coins: st.coins, energy: st.energy, eTs: st.eTs, jars: st.jars, level: st.level, upg: st.upg, heroes: st.heroes, freeLeft: st.freeLeft, dshop: st.dshop, wshop: st.wshop } });
+  return json(env, { ok: true, rev, now, fix: { coins: st.coins, energy: st.energy, eTs: st.eTs, jars: st.jars, level: st.level, upg: st.upg, heroes: st.heroes, freeLeft: st.freeLeft, dshop: st.dshop, wshop: st.wshop, tok: st.tok, mis: st.mis } });
 }
 
 async function apiInvoice(env, body, now) {

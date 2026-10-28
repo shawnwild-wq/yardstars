@@ -125,7 +125,7 @@ export const HEROES = {
   kid: 'epic', chef: 'rare', dog: 'rare', hamster: 'rare', grandma: 'rare', yoga: 'epic',
 };
 export const HERO_NAMES = { trainer: 'Тренер', lifter: 'Лифтёр', office: 'Офисник', cat: 'Кот', strongman: 'Стронгмен', muaythai: 'Тайский боец',
-  coachf: 'Тренер Лена', student: 'Студентка', zoomer: 'Зумер', kid: 'Ребёнок', chef: 'Шеф', dog: 'Пёс', hamster: 'Хомяк', grandma: 'Бабушка', yoga: 'Йог Мира' };
+  coachf: 'Фитнес-тренер', student: 'Студентка', zoomer: 'Зумер', kid: 'Ребёнок', chef: 'Шеф', dog: 'Пёс', hamster: 'Хомяк', grandma: 'Бабушка', yoga: 'Йог' };
 export const HERO_PRICE = { rare: 300, epic: 500 };
 export const GIFT_LEVELS = [3, 6, 10];
 export const SHARD_HEROES_PER_LEVELS = 4;     // at most one shard-built hero per 4 levels (anti-cheat cap)
@@ -212,3 +212,34 @@ export const DSHOP = {
 };
 // Weekly shop for coins: 3 heroes rotate every week, shards of the chosen hero
 export const WSHOP = { coins: 300, lim: 3, heroes: 3 };
+
+// Missions (like TopHeroes «Миссии»): daily reset 7:00 local, weekly reset Monday 7:00.
+// give: tok = жетоны соседа, jars, coins. pts = activity points toward the chests.
+export const MISSIONS = {
+  day: {
+    login:  { need: 1,  pts: 10, give: { tok: 5 } },
+    orders: { need: 10, pts: 20, give: { tok: 10, jars: 1 } },
+    merges: { need: 30, pts: 20, give: { tok: 10 } },
+    gens:   { need: 40, pts: 15, give: { tok: 5, coins: 30 } },
+    chests: { need: 2,  pts: 15, give: { jars: 1 } },
+    build:  { need: 1,  pts: 20, give: { tok: 10 } },
+    goal:   { need: 1,  pts: 15, give: { tok: 5 } },
+    shop:   { need: 1,  pts: 10, give: { tok: 5 } },
+    help:   { need: 1,  pts: 10, give: { tok: 5 } },
+  },
+  week: {
+    login:  { need: 5,   pts: 30, give: { tok: 30 } },
+    orders: { need: 70,  pts: 30, give: { tok: 30, jars: 3 } },
+    merges: { need: 200, pts: 20, give: { tok: 20 } },
+    chests: { need: 10,  pts: 20, give: { jars: 3 } },
+    built:  { need: 3,   pts: 30, give: { tok: 30 } },
+    goal:   { need: 10,  pts: 20, give: { tok: 20 } },
+    herolv: { need: 2,   pts: 30, give: { tok: 20, coins: 200 } },
+  },
+};
+export const MISSION_BOXES = {
+  day:  [{ at: 20, give: { jars: 2 } }, { at: 40, give: { tok: 15, chests: 1 } }, { at: 60, give: { coins: 100, shards: 1 } }, { at: 100, give: { jars: 3, tok: 20 } }, { at: 150, give: { coins: 300, chests: 1, tok: 30 } }],
+  week: [{ at: 40, give: { tok: 40 } }, { at: 80, give: { jars: 5, shards: 2 } }, { at: 120, give: { tok: 60, chests: 2 } }, { at: 180, give: { coins: 800, jars: 10, shards: 3 } }],
+};
+// Token shop («Лавка жетонов»): no limits, prices in жетоны
+export const TSHOP = { jar: 15, chest: 30, shard: 40, jars5: 65 };
