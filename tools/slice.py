@@ -77,6 +77,24 @@ SHEETS = {
     'gear_hamster': dict(n=5, out=['gear/hamster_wheel', 'gear/hamster_seeds', 'gear/hamster_house', 'gear/hamster_bottle', 'gear/hamster_ball']),
     'gear_grandma': dict(n=5, out=['gear/grandma_knit', 'gear/grandma_glasses', 'gear/grandma_pies', 'gear/grandma_scarf', 'gear/grandma_jam']),
     'gear_yoga': dict(n=5, out=['gear/yoga_mat', 'gear/yoga_blocks', 'gear/yoga_strap', 'gear/yoga_incense', 'gear/yoga_bowl']),
+    # street: icons of places (one row of 3) and objects of places (2x2 grid, row by row)
+    'street1': dict(clean=True, n=3, out=['street/home', 'street/yard', 'street/sport'], size=384),
+    'street2': dict(clean=True, n=3, out=['street/cafe', 'street/park', 'street/market'], size=384),
+    'yard1':   dict(tight=True, clean=True, grid=2, out=['place/y_bench', 'place/y_sandbox', 'place/y_swing', 'place/y_lamp'], size=384),
+    'yard2':   dict(tight=True, clean=True, grid=2, out=['place/y_flowers', 'place/y_slide', 'place/y_tree', 'place/y_fountain'], size=384),
+    'sport1':  dict(tight=True, clean=True, grid=2, out=['place/s_pullup', 'place/s_rack', 'place/s_bench', 'place/s_kettle'], size=384),
+    'sport2':  dict(tight=True, clean=True, grid=2, out=['place/s_tire', 'place/s_bag', 'place/s_mats', 'place/s_board'], size=384),
+    'cafe1':   dict(tight=True, clean=True, grid=2, out=['place/c_table', 'place/c_plants', 'place/c_counter', 'place/c_coffee'], size=384),
+    'cafe2':   dict(tight=True, clean=True, grid=2, out=['place/c_showcase', 'place/c_oven', 'place/c_sign', 'place/c_lights'], size=384),
+    'park1':   dict(tight=True, clean=True, grid=2, out=['place/p_bench', 'place/p_flowers', 'place/p_lamp', 'place/p_pond'], size=384),
+    'park2':   dict(tight=True, clean=True, grid=2, out=['place/p_bridge', 'place/p_yoga', 'place/p_gazebo', 'place/p_statue'], size=384),
+    'market1': dict(tight=True, clean=True, grid=2, out=['place/m_veg', 'place/m_fruit', 'place/m_bread', 'place/m_milk'], size=384),
+    'market2': dict(tight=True, clean=True, grid=2, out=['place/m_fish', 'place/m_flowers', 'place/m_scale', 'place/m_arch'], size=384),
+    'bg_yard':   dict(bg='place/yard'),
+    'bg_sport':  dict(bg='place/sport'),
+    'bg_cafe':   dict(bg='place/cafe'),
+    'bg_park':   dict(bg='place/park'),
+    'bg_market': dict(bg='place/market'),
     # full backgrounds, no cutting
     'room0': dict(bg='room/base0'),
     'room1': dict(bg='room/base1'),
@@ -130,11 +148,75 @@ def objects(fg, n):
     return boxes, lab
 
 
+def grid_objects(fg, g):
+    """Objects stand in a g x g grid: cut at the empty row/column nearest each even split."""
+    h, w = fg.shape
+    def cuts(empty, size):
+        out = [0]
+        for k in range(1, g):
+            ideal = size * k / g
+            cand = [x for x in range(int(ideal - size * .2), int(ideal + size * .2)) if empty[x]]
+            out.append(min(cand, key=lambda c: abs(c - ideal)) if cand else int(ideal))
+        return out + [size]
+    ycut = cuts(fg.sum(1) == 0, h)
+    lab = np.zeros_like(fg, dtype=np.int32)
+    boxes = []
+    for r in range(g):
+        band = fg[ycut[r]:ycut[r + 1]]
+        xcut = cuts(band.sum(0) == 0, w)
+        for c in range(g):
+            part = np.zeros_like(fg)
+            part[ycut[r]:ycut[r + 1], xcut[c]:xcut[c + 1]] = fg[ycut[r]:ycut[r + 1], xcut[c]:xcut[c + 1]]
+            ys, xs = np.where(part)
+            if not len(xs):
+                continue
+            i = len(boxes) + 1
+            lab[part] = i
+            boxes.append((xs.min(), ys.min(), xs.max() + 1, ys.max() + 1, i))
+    return boxes, lab
+
+
+def holes(rgb, fg, tol=16, min_area=40):
+    """Background-coloured pockets enclosed by an object (between swing posts, inside a frame)."""
+    h, w, _ = rgb.shape
+    border = np.concatenate([rgb[0], rgb[-1], rgb[:, 0], rgb[:, -1]]).astype(int)
+    ref = np.median(border, axis=0)
+    near = (np.sqrt(((rgb.astype(int) - ref) ** 2).sum(-1)) < tol) & fg
+    lab, n = ndi.label(near)
+    if not n:
+        return fg
+    area = ndi.sum(np.ones_like(lab), lab, index=np.arange(1, n + 1))
+    big = np.isin(lab, np.where(area >= min_area)[0] + 1)
+    return fg & ~big
+
+
+def matte(img, fg):
+    """Soft alpha on the object's rim and the white fringe removed from rim colours."""
+    rgb = np.array(img).astype(float)
+    border = np.concatenate([rgb[0], rgb[-1], rgb[:, 0], rgb[:, -1]])
+    ref = np.median(border, axis=0)
+    inner = ndi.binary_erosion(fg, iterations=2)
+    rim = fg & ~inner
+    d = np.sqrt(((rgb - ref) ** 2).sum(-1))
+    a = np.where(inner, 1.0, np.where(rim, np.clip(d / 90.0, 0, 1), 0.0))
+    a = np.array(Image.fromarray((a * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.5))).astype(float) / 255
+    a = np.where(fg, a, 0)
+    safe = np.maximum(a, 1e-3)[..., None]
+    col = np.where(rim[..., None] & (a[..., None] > 0.05), (rgb - (1 - safe) * ref) / safe, rgb)
+    out = np.dstack([np.clip(col, 0, 255), a * 255]).astype(np.uint8)
+    return Image.fromarray(out, 'RGBA')
+
+
 def cutout(img, fg, lab, box, pad):
     x0, y0, x1, y1, i = box
-    a = ((lab == i) & fg).astype(np.uint8) * 255
-    alpha = Image.fromarray(a).filter(ImageFilter.GaussianBlur(0.6))
-    rgba = img.copy(); rgba.putalpha(alpha)
+    if img.mode == 'RGBA':  # already matted: keep only this object
+        rgba = img.copy()
+        al = np.array(rgba.split()[-1]); al[lab != i] = 0
+        rgba.putalpha(Image.fromarray(al))
+    else:
+        a = ((lab == i) & fg).astype(np.uint8) * 255
+        alpha = Image.fromarray(a).filter(ImageFilter.GaussianBlur(0.6))
+        rgba = img.copy(); rgba.putalpha(alpha)
     x0, y0 = max(0, x0 - pad), max(0, y0 - pad)
     x1, y1 = min(img.width, x1 + pad), min(img.height, y1 + pad)
     return rgba.crop((x0, y0, x1, y1))
@@ -181,7 +263,11 @@ def run(src, dst):
         rgb = np.array(img)
         fg = ~bg_mask(rgb, spec.get('tol', 38))
         fg = ndi.binary_opening(fg, iterations=1)
-        boxes, lab = objects(fg, spec['n'])
+        if 'grid' in spec:
+            spec['n'] = spec['grid'] ** 2
+            boxes, lab = grid_objects(fg, spec['grid'])
+        else:
+            boxes, lab = objects(fg, spec['n'])
         if len(boxes) != spec['n']:
             print(f'WARNING {key}: found {len(boxes)} objects, expected {spec["n"]}')
         pad = max(4, img.width // 200)
@@ -195,7 +281,13 @@ def run(src, dst):
                 done.append(save(face_from_body(body), dst, 'heroes/looks/' + name + '_face'))
             continue
         size = spec.get('size', S)
+        if spec.get('clean'):
+            fg = holes(rgb, fg)
+            img = matte(img, fg)
         for b, name in zip(boxes, spec['out']):
+            if spec.get('tight'):  # keep the object's own proportions so it stands on its base
+                im = cutout(img, fg, lab, b, pad); im.thumbnail((size, size), Image.LANCZOS)
+                done.append(save(im, dst, name)); continue
             done.append(save(fit_square(cutout(img, fg, lab, b, pad), size), dst, name))
     print('\n'.join(done)); print(len(done), 'files')
 

@@ -309,6 +309,23 @@ Date.now = realNow;
   assert.equal(Object.values(r.data.fix.upg).filter((u) => u.state === 'build').length, 2); ok('second builder: two builds at once');
 }
 
+// a finished place gives 5 jars once
+{
+  const U = { id: 8008, first_name: 'Место' }, I = await initData(U, env.BOT_TOKEN);
+  await call('/api/load', { initData: I });
+  await call('/api/save', { initData: I, rev: 0, state: { owner: { avatar: 'm0' }, firstHero: 'cat', heroes: { cat: { lv: 1 } }, coins: 20, level: 1, energy: 100, eTs: Date.now() } });
+  const yard = ['y_bench','y_sandbox','y_swing','y_lamp','y_flowers','y_slide','y_tree','y_fountain'];
+  const x = JSON.parse((await env.DB.prepare('SELECT state FROM players WHERE uid=8008').first()).state);
+  x.upg = Object.fromEntries(yard.map((id) => [id, { state: 'done' }])); x.jars = 0;
+  await env.DB.prepare('UPDATE players SET state=? WHERE uid=8008').bind(JSON.stringify(x)).run();
+  let p = await env.DB.prepare('SELECT state, rev FROM players WHERE uid=8008').first(), st = JSON.parse(p.state);
+  let r = await call('/api/save', { initData: I, rev: p.rev, state: st });
+  assert.equal(r.data.fix.jars, 5); ok('finished yard gives 5 jars');
+  p = await env.DB.prepare('SELECT state, rev FROM players WHERE uid=8008').first(); st = JSON.parse(p.state);
+  r = await call('/api/save', { initData: I, rev: p.rev, state: st });
+  assert.equal(r.data.fix.jars, 5); ok('place reward only once');
+}
+
 // setup endpoint
 let res = await worker.fetch(new Request('https://w.dev/setup?key=bad'), env, {}); assert.equal(res.status, 403);
 tgCalls.length = 0; res = await worker.fetch(new Request('https://w.dev/setup?key=k'), env, {});

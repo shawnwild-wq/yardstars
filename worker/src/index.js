@@ -1,6 +1,6 @@
 // Yard Stars — Cloudflare Worker: game API, Telegram bot, Stars payments, notifications.
 import { ECON, REPAIRS, REPAIR_NAMES, SKUS, HEROES, HERO_PRICE, HERO_NAMES, GIFT_LEVELS, SHARD_HEROES_PER_LEVELS, TEAM_OPEN, TEAM_SIZE,
-  speedPrice, LOOKS, LOOK_NAMES, lookInfo, GEAR_STARS, HAIR, HAIR_LEVELS, costumeLevel, HERO_MAX_LEVEL, JAR_ENERGY, DAILY_JARS, SERVER_SKILLS, STAR_COST, STAR_SKILL, STARS_PER_LEVELS, HELPS } from './config.js';
+  speedPrice, LOOKS, LOOK_NAMES, lookInfo, GEAR_STARS, HAIR, HAIR_LEVELS, costumeLevel, HERO_MAX_LEVEL, JAR_ENERGY, DAILY_JARS, SERVER_SKILLS, STAR_COST, STAR_SKILL, STARS_PER_LEVELS, HELPS, PLACE_OF, PLACE_JARS } from './config.js';
 
 const DAY = 24 * 3600 * 1000;
 const HOUR = 3600 * 1000;
@@ -84,7 +84,7 @@ async function touch(env, uid, now, tz) {
 
 /* ------------------------------------------------------- state validation */
 // Fields only the server may change.
-const SERVER_FIELDS = ['paid', 'paidHeroes', 'paidLooks', 'paidGear', 'paidTeams', 'createdAt', 'imported', 'badges', 'pendingChests', 'serverGifts', 'jarDay', 'helped', 'helpGiven'];
+const SERVER_FIELDS = ['paid', 'paidHeroes', 'paidLooks', 'paidGear', 'paidTeams', 'createdAt', 'imported', 'badges', 'pendingChests', 'serverGifts', 'jarDay', 'helped', 'helpGiven', 'placesRewarded'];
 const STARTERS = Object.keys(HEROES).filter((h) => HEROES[h] === 'starter');
 
 // skill value of the hero that has this skill, if he stands in an open team
@@ -187,6 +187,15 @@ export function sanitize(prev, next, now, prevSavedAt) {
   let room = builders - active.filter((id) => pu[id] && pu[id].state === 'build').length;
   for (const id of active) if (!(pu[id] && pu[id].state === 'build')) { if (room > 0) room--; else delete fixed[id]; }
   out.upg = fixed;
+  // a fully finished place gives energy jars once
+  const done = new Set(Object.keys(fixed).filter((id) => fixed[id].state === 'done'));
+  const rewarded = new Set(out.placesRewarded || []);
+  for (const pl of new Set(Object.values(PLACE_OF))) {
+    if (rewarded.has(pl)) continue;
+    const ids = Object.keys(PLACE_OF).filter((id) => PLACE_OF[id] === pl);
+    if (ids.every((id) => done.has(id))) { rewarded.add(pl); out.jars = (Number(out.jars) || 0) + PLACE_JARS; }
+  }
+  if (rewarded.size) out.placesRewarded = [...rewarded];
 
   // heroes: 1 starter + gift starters by level + paid + shard-built (capped by level)
   const ph = prev.heroes || {}, nh = out.heroes && typeof out.heroes === 'object' ? out.heroes : {};
@@ -367,7 +376,7 @@ async function rescheduleAlerts(env, uid, st, now) {
   if (e < ECON.ENERGY_MAX) {
     const at = (Number(st.eTs) || now) + (ECON.ENERGY_MAX - e) * regenMs(st);
     stmts.push(env.DB.prepare('INSERT OR REPLACE INTO alerts (uid, kind, at, text) VALUES (?,?,?,?)')
-      .bind(uid, 'energy', at, '⚡ Энергия полная — на кухне всё готово к готовке! — Шеф'));
+      .bind(uid, 'energy', Math.max(at, now + 60 * 60 * 1000), '⚡ Энергия снова 100/100 — соседи ждут заказы на кухне. Заходи! — Шеф'));
   }
   await env.DB.batch(stmts);
 }
@@ -667,7 +676,7 @@ async function runCron(env, now) {
   ).bind(now).all();
   for (const a of due.results || []) {
     const del = () => env.DB.prepare('DELETE FROM alerts WHERE uid=? AND kind=?').bind(a.uid, a.kind).run();
-    if (a.blocked || !a.started || now - a.last_seen < 2 * 60 * 1000) { await del(); continue; }
+    if (a.blocked || !a.started || now - a.last_seen < (a.kind === 'energy' ? 60 : 2) * 60 * 1000) { await del(); continue; }
     if (isQuiet(now, a.tz)) {
       await env.DB.prepare('UPDATE alerts SET at=? WHERE uid=? AND kind=?').bind(nextMorning(now, a.tz), a.uid, a.kind).run();
       continue;

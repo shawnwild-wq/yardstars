@@ -95,6 +95,17 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .hero-in-room .ic{display:grid;width:100%;aspect-ratio:3/4;font-size:min(14vw,58px)}
 .hero-in-room>span:not(.ic){font-size:10px;font-weight:800;color:#fff;background:rgba(58,36,20,.75);border-radius:6px;padding:1px 6px;white-space:nowrap}
 .roombar{position:absolute;left:8px;right:8px;bottom:8px;display:flex;gap:6px}
+.roombar .back{flex:0 0 auto;padding:0 12px}
+.room.outdoor .fur .ic{display:block;aspect-ratio:auto;filter:drop-shadow(0 5px 4px rgba(0,0,0,.28))}.room.outdoor .fur .ic img{height:auto}
+.room.outdoor{background:linear-gradient(#bfe3f0 0 30%,#9cc777 30% 100%)}
+.ptitle{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(58,36,20,.8);color:#fff4dc;font-weight:800;font-size:14px;padding:4px 12px;border-radius:12px;white-space:nowrap}
+.street{gap:8px;overflow:auto}
+.spot{display:flex;gap:10px;align-items:center;text-align:left;background:#fff8ea;border:3px solid var(--line,#e9d2a8);border-radius:16px;padding:8px;width:100%}
+.spot .ic{width:84px;height:62px;flex:0 0 auto;font-size:40px}
+.spot .tx{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.spot .tx b{font-size:15px;color:var(--wood)}.spot .tx span{font-size:12px;color:#8a6a4a}
+.spot .bar{background:var(--cell-2)}.spot .bar i{background:var(--go)}
+.spot.locked{opacity:.55;filter:grayscale(.6)}
 .cozy{flex:1;display:flex;align-items:center;gap:6px;background:rgba(255,246,229,.92);border:2px solid var(--wood);border-radius:12px;padding:6px 8px;font-size:12px;font-weight:700;color:var(--wood)}
 .cozy .bar{flex:1;background:var(--cell-2)}.cozy .bar i{background:var(--go)}
 .btn{color:#fff;font-weight:800;font-size:14px;border-radius:14px;padding:9px 12px;display:inline-flex;align-items:center;justify-content:center;gap:6px;line-height:1.1}
@@ -174,11 +185,11 @@ input,select{font-family:inherit;font-size:16px;border:2px solid var(--cell-2);b
 const CONFIG = {
   API: 'https://yardstars.shawnwild.workers.dev', BOT: 'YardStarsGameBot',
   COLS: 6, ROWS: 7,
-  ENERGY_MAX: 100, ENERGY_REGEN_MS: 2*60*1000, GOAL_ENERGY: 10, LEVEL_ENERGY: 20, JAR_ENERGY: 5,
-  XP_PER_LEVEL: 40,                        // уровень N требует 40×N опыта
+  ENERGY_MAX: 100, ENERGY_REGEN_MS: 2*60*1000, GOAL_ENERGY: 10, LEVEL_ENERGY: 10, JAR_ENERGY: 5,
+  XP_PER_LEVEL: 60,                        // уровень N требует 60×N^1.6 опыта (дальше — дольше)
   GEN_COST: [0, 200, 600],                 // улучшение генератора до ур.2 / ур.3
   GEN_ODDS: [[90,10,0],[70,27,3],[55,35,10]],
-  SPECIAL: { chest: 4, joker: 2, scis: 2 }, // шанс в процентах на нажатие генератора
+  SPECIAL: { chest: 3, joker: 1.5, scis: .5 }, // шанс в процентах на нажатие генератора
   HERO_LEVEL_COINS: 50, HERO_MAX_LEVEL: 30,
   SAVE_DEBOUNCE_MS: 2500,
   SHARD_CHANCE: .25,                       // шанс осколка героя в сундуке
@@ -330,7 +341,63 @@ const REPAIRS = [
   {id:'pictures', e:'🖼️', n:'Картины', c:550, t:2*3600, pos:[19,31,28]},
   {id:'wardrobe', e:'🚪', n:'Шкаф', c:650, t:3*3600, pos:[17,66,60]},
   {id:'lights', e:'✨', n:'Гирлянда', c:800, t:4*3600, pos:[50,44,94]},
+  {id:'y_bench', p:'yard', e:'🪑', n:'Скамейка', c:150, t:600, pos:[50, 88, 26]},
+  {id:'y_sandbox', p:'yard', e:'🏖️', n:'Песочница', c:190, t:900, pos:[74, 64, 28]},
+  {id:'y_swing', p:'yard', e:'🎠', n:'Качели', c:250, t:1380, pos:[74, 40, 32]},
+  {id:'y_lamp', p:'yard', e:'🏮', n:'Фонарь', c:320, t:2100, pos:[90, 58, 9]},
+  {id:'y_flowers', p:'yard', e:'🌷', n:'Клумба', c:420, t:3120, pos:[50, 74, 22]},
+  {id:'y_slide', p:'yard', e:'🛝', n:'Горка', c:540, t:4740, pos:[24, 64, 28]},
+  {id:'y_tree', p:'yard', e:'🌳', n:'Дерево с домиком', c:700, t:7140, pos:[22, 42, 32]},
+  {id:'y_fountain', p:'yard', e:'⛲', n:'Фонтанчик', c:900, t:10800, pos:[50, 54, 28]},
+  {id:'s_pullup', p:'sport', e:'🤸', n:'Турник', c:300, t:1200, pos:[26, 38, 28]},
+  {id:'s_kettle', p:'sport', e:'🏋️', n:'Гири', c:390, t:1740, pos:[84, 60, 18]},
+  {id:'s_bench', p:'sport', e:'💪', n:'Скамья для жима', c:500, t:2580, pos:[50, 52, 26]},
+  {id:'s_mats', p:'sport', e:'🧘', n:'Маты', c:650, t:3840, pos:[30, 72, 22]},
+  {id:'s_bag', p:'sport', e:'🥊', n:'Боксёрская груша', c:840, t:5640, pos:[15, 60, 15]},
+  {id:'s_tire', p:'sport', e:'🛞', n:'Покрышка', c:1080, t:8280, pos:[70, 74, 22]},
+  {id:'s_rack', p:'sport', e:'🏋️', n:'Силовая рама', c:1390, t:12240, pos:[72, 38, 26]},
+  {id:'s_board', p:'sport', e:'🏆', n:'Табло рекордов', c:1800, t:18000, pos:[50, 27, 18]},
+  {id:'c_table', p:'cafe', e:'⛱️', n:'Столик под зонтом', c:500, t:1800, pos:[28, 76, 28]},
+  {id:'c_plants', p:'cafe', e:'🪴', n:'Кадки с цветами', c:650, t:2580, pos:[76, 78, 26]},
+  {id:'c_counter', p:'cafe', e:'🧋', n:'Стойка бариста', c:830, t:3660, pos:[30, 42, 30]},
+  {id:'c_coffee', p:'cafe', e:'☕', n:'Кофемашина', c:1080, t:5220, pos:[66, 40, 16]},
+  {id:'c_showcase', p:'cafe', e:'🎂', n:'Витрина с тортами', c:1390, t:7440, pos:[80, 58, 26]},
+  {id:'c_oven', p:'cafe', e:'🍕', n:'Печь для пиццы', c:1800, t:10620, pos:[18, 58, 24]},
+  {id:'c_sign', p:'cafe', e:'🪧', n:'Вывеска «У Шефа»', c:2320, t:15120, pos:[50, 56, 13]},
+  {id:'c_lights', p:'cafe', e:'✨', n:'Гирлянда фонариков', c:3000, t:21600, pos:[50, 27, 46]},
+  {id:'p_bench', p:'park', e:'🪑', n:'Лавочка', c:800, t:2700, pos:[28, 80, 26]},
+  {id:'p_flowers', p:'park', e:'🌹', n:'Розарий', c:1020, t:3780, pos:[72, 82, 24]},
+  {id:'p_lamp', p:'park', e:'🏮', n:'Фонари', c:1310, t:5280, pos:[86, 44, 14]},
+  {id:'p_pond', p:'park', e:'🦆', n:'Пруд с утками', c:1680, t:7440, pos:[52, 56, 32]},
+  {id:'p_bridge', p:'park', e:'🌉', n:'Мостик', c:2150, t:10440, pos:[20, 62, 26]},
+  {id:'p_yoga', p:'park', e:'🧘', n:'Площадка для йоги', c:2750, t:14640, pos:[80, 64, 26]},
+  {id:'p_gazebo', p:'park', e:'⛩️', n:'Беседка', c:3520, t:20520, pos:[55, 34, 30]},
+  {id:'p_statue', p:'park', e:'🗽', n:'Статуя', c:4500, t:28800, pos:[22, 40, 17]},
+  {id:'m_veg', p:'market', e:'🥕', n:'Овощной лоток', c:1200, t:3600, pos:[20, 46, 26]},
+  {id:'m_fruit', p:'market', e:'🍎', n:'Фруктовый лоток', c:1540, t:5160, pos:[80, 46, 26]},
+  {id:'m_bread', p:'market', e:'🥖', n:'Хлебный лоток', c:1990, t:7320, pos:[22, 66, 26]},
+  {id:'m_milk', p:'market', e:'🥛', n:'Молочный лоток', c:2560, t:10440, pos:[78, 66, 26]},
+  {id:'m_fish', p:'market', e:'🐟', n:'Рыбный лоток', c:3290, t:14880, pos:[50, 56, 26]},
+  {id:'m_flowers', p:'market', e:'💐', n:'Цветочный лоток', c:4230, t:21240, pos:[50, 78, 24]},
+  {id:'m_scale', p:'market', e:'⚖️', n:'Большие весы', c:5440, t:30300, pos:[84, 80, 16]},
+  {id:'m_arch', p:'market', e:'🎪', n:'Арка «Рынок»', c:7000, t:43200, pos:[50, 30, 30]},
 ];
+REPAIRS.forEach(r => { if(!r.p) r.p = 'home'; });
+const PLACES = [
+  {id:'home', n:'Мой дом', e:'🏠', lvl:1, d:'Комната, где живёт первая команда'},
+  {id:'yard', n:'Двор', e:'🌳', lvl:3, heroes:["kid", "cat", "hamster", "dog"]},
+  {id:'sport', n:'Спортплощадка', e:'🏋️', lvl:5, heroes:["trainer", "lifter", "strongman", "muaythai", "coachf"]},
+  {id:'cafe', n:'Кафе Шефа', e:'☕', lvl:8, heroes:["chef", "office", "student", "zoomer"]},
+  {id:'park', n:'Парк', e:'🌷', lvl:11, heroes:["yoga", "grandma", "dog", "coachf"]},
+  {id:'market', n:'Рынок', e:'🧺', lvl:14, heroes:["grandma", "chef", "hamster", "student"]},
+];
+const placeItems = id => REPAIRS.filter(r => r.p===id);
+const placeOpen = pl => S.level >= pl.lvl;
+const isDone = r => S.upg[r.id] && S.upg[r.id].state==='done';
+const placeDone = id => placeItems(id).every(isDone);
+const placesDone = () => PLACES.filter(pl => placeDone(pl.id)).length;
+const PLACE_BONUS = .03;   // +3% монет за каждое полностью отделанное место
+let curPlace = null;       // открытое место на улице (null — сама улица)
 const GOALS = [
   ['water','💧','Выпить 6 стаканов воды'],['move','🤸','Сделать зарядку'],['sleep','🌙','Лечь до 23:00'],['walk','🚶','Прогулка 20 минут'],
   ['stretch','🧘','Растяжка 5 минут'],['breath','🌬️','Подышать 2 минуты'],['veg','🥦','Съесть овощи или фрукты'],['nophone','📵','Без телефона перед сном'],
@@ -493,7 +560,7 @@ function tickEnergy(){
   const ms = regenMs(), g = Math.floor((now()-S.eTs)/ms);
   if(g>0){ S.energy = Math.min(CONFIG.ENERGY_MAX, S.energy+g); S.eTs += g*ms; if(S.energy>=CONFIG.ENERGY_MAX) S.eTs = now(); }
 }
-const xpNeed = l => l*CONFIG.XP_PER_LEVEL;
+const xpNeed = l => Math.round(CONFIG.XP_PER_LEVEL * Math.pow(l, 1.6));
 function addXp(n){
   S.xp += n;
   while(S.xp >= xpNeed(S.level)){
@@ -530,7 +597,7 @@ function ensureOrders(){
   for(let k=0;k<n;k++) if(!S.orders[k]) S.orders[k] = mkOrder();
 }
 function lineShare(o, lines){ return o.items.filter(x => lines.includes(x.c)).length / Math.max(1, o.items.length); }
-const payOf = o => Math.round(o.reward * (1 + heroBonus(o.hero) + skill('coins') + skill('line_f')*lineShare(o,['f']) + skill('line_bd')*lineShare(o,['b','d']) + skill('line_g')*lineShare(o,['g'])));
+const payOf = o => Math.round(o.reward * (1 + heroBonus(o.hero) + placesDone()*PLACE_BONUS + skill('coins') + skill('line_f')*lineShare(o,['f']) + skill('line_bd')*lineShare(o,['b','d']) + skill('line_g')*lineShare(o,['g'])));
 function matchIdx(o){ const used = new Set(); return o.items.map(x => { const i = S.board.findIndex((b,j)=>b&&!b.sp&&!used.has(j)&&b.c===x.c&&b.l===x.l); if(i>=0) used.add(i); return i; }); }
 function give(k){
   const o = S.orders[k]; const m = matchIdx(o); if(!m.every(i=>i>=0)) return;
@@ -711,26 +778,51 @@ function bindBoard(){
   boardEl.addEventListener('pointercancel', () => { if(drag && drag.ghost) drag.ghost.remove(); drag = null; selected = null; renderKitchen(); });
 }
 
-/* ---------- двор ---------- */
-function homeHtml(){
+/* ---------- двор: улица из мест, в каждом — свои стройки ---------- */
+function homeHtml(){ if(curPlace && PLACES.some(x=>x.id===curPlace) && placeOpen(PLACES.find(x=>x.id===curPlace))) return curPlace==='home' ? roomHtml() : placeHtml(curPlace); curPlace = null; return streetHtml(); }
+function buildStatus(id){
+  const items = placeItems(id), done = items.filter(isDone).length;
+  const b = items.find(r => S.upg[r.id] && S.upg[r.id].state==='build');
+  return { done, total: items.length, text: b ? (now()>=S.upg[b.id].end ? `✅ ${b.n} — готово!` : `🔨 ${b.n}: ${fmtTime((S.upg[b.id].end-now())/1000)}`) : null };
+}
+function streetHtml(){
+  const cards = PLACES.map(pl => { const open = placeOpen(pl), st = buildStatus(pl.id), full = st.done===st.total;
+    return `<button class="spot${open?'':' locked'}" ${open?`data-place="${pl.id}"`:'disabled'}>${ic('street/'+pl.id, pl.e)}
+      <div class="tx"><b>${pl.n}${full?' ✨':''}</b><span>${open ? (st.text || (full ? 'Всё отделано · +'+Math.round(PLACE_BONUS*100)+'% монет за заказы' : 'Отделано '+st.done+' из '+st.total)) : '🔒 откроется на '+pl.lvl+'-м уровне'}</span>
+      ${open?`<div class="bar"><i style="width:${st.done/st.total*100}%"></i></div>`:''}</div></button>`; }).join('');
+  return `<div class="panel street"><h2>Наша улица</h2><p>Отделывай места по очереди — за каждое готовое место +${Math.round(PLACE_BONUS*100)}% монет за все заказы, сундук и 5 банок энергии.</p>${cards}</div>`;
+}
+function placeBar(id){
+  const st = buildStatus(id);
+  return `<div class="roombar"><button class="btn b-wood back" data-street>←</button><div class="cozy">${st.text || ('Уют '+st.done+'/'+st.total)}<div class="bar"><i style="width:${st.done/st.total*100}%"></i></div></div>
+    <button class="btn b-sun" data-open="repair">🔨 Стройка</button></div>`;
+}
+function placeHtml(id){
+  const pl = PLACES.find(x=>x.id===id);
+  const fur = placeItems(id).filter(isDone).sort((a,b)=>a.pos[1]-b.pos[1])
+    .map(r => `<div class="fur${justBuilt===r.id?' newly':''}" style="left:${r.pos[0]}%;top:${r.pos[1]}%;width:${r.pos[2]}%">${ic('place/'+r.id, r.e)}</div>`).join('');
+  const hs = (pl.heroes||[]).filter(ownsHero).slice(0,4); const xs = [30,70,15,85], ys = [83,83,99,99];
+  const heroes = hs.map((h,k) => `<button class="hero-in-room" data-hero="${h}" style="left:${xs[k]}%;top:${ys[k]}%;width:17%">${heroBody(h)}<span>${HEROES[h].n}</span></button>`).join('');
+  justBuilt = null;
+  return `<div class="room outdoor"><img class="bg" src="assets/place/${id}.webp" alt="" onerror="this.classList.add('nf')"><div class="ptitle">${pl.e} ${pl.n}</div>${fur}${heroes}${placeBar(id)}</div>`;
+}
+function roomHtml(){
   const nice = S.upg.walls && S.upg.walls.state==='done';
-  const done = REPAIRS.filter(r => S.upg[r.id] && S.upg[r.id].state==='done').length;
   const Z = ['lights','pictures','wardrobe','shelf','lamp','rug','sofa','table','plant'];
-  const fur = REPAIRS.filter(r => r.pos && S.upg[r.id] && S.upg[r.id].state==='done').sort((x,y)=>Z.indexOf(x.id)-Z.indexOf(y.id))
+  const fur = placeItems('home').filter(r => r.pos && isDone(r)).sort((x,y)=>Z.indexOf(x.id)-Z.indexOf(y.id))
     .map(r => `<div class="fur${justBuilt===r.id?' newly':''}${r.id==='rug'?' flat':''}" style="left:${r.pos[0]}%;top:${r.pos[1]}%;width:${r.pos[2]}%">${ic('room/'+r.id, r.e)}</div>`).join('');
   const hs = (S.teams[0]||[]).slice(0,5); const xs = [18,34,50,66,82];
   const heroes = hs.map((h,k) => `<button class="hero-in-room" data-hero="${h}" style="left:${xs[k]}%;top:${k%2?96:99}%;width:17%">${heroBody(h)}<span>${HEROES[h].n}</span></button>`).join('');
-  const b = REPAIRS.find(r => S.upg[r.id] && S.upg[r.id].state==='build');
-  const status = b ? (now()>=S.upg[b.id].end ? `✅ ${b.n} — готово!` : `🔨 ${b.n}: ${fmtTime((S.upg[b.id].end-now())/1000)}`) : `Уют ${done}/${REPAIRS.length}`;
   justBuilt = null;
-  return `<div class="room${nice?' nice':''}"><img class="bg" src="assets/room/base${nice?1:0}.webp" alt="" onerror="this.classList.add('nf')">${fur}${heroes}
-    <div class="roombar"><div class="cozy">${status}<div class="bar"><i style="width:${done/REPAIRS.length*100}%"></i></div></div>
-    <button class="btn b-sun" data-open="repair">🔨 Ремонт</button></div></div>`;
+  return `<div class="room${nice?' nice':''}"><img class="bg" src="assets/room/base${nice?1:0}.webp" alt="" onerror="this.classList.add('nf')">${fur}${heroes}${placeBar('home')}</div>`;
 }
 let justBuilt = null;
 function tickBuilds(){
   for(const r of REPAIRS){ const u = S.upg[r.id];
-    if(u && u.state==='build' && now() >= u.end){ u.state='done'; delete u.start; delete u.end; justBuilt = r.id; toast('🔨 Готово: '+r.n+'! Дом стал уютнее'); haptic('ok'); markDirty(); if(view==='home') render(); }
+    if(u && u.state==='build' && now() >= u.end){ u.state='done'; delete u.start; delete u.end; justBuilt = r.id; haptic('ok');
+      const pl = PLACES.find(x=>x.id===r.p);
+      if(placeDone(r.p)){ const j = place({sp:'chest'}); toast('🎉 '+pl.n+' — полностью отделано!\n+'+Math.round(PLACE_BONUS*100)+'% монет за заказы навсегда, сундук на кухне и 5 банок энергии', 5000); }
+      else toast('🔨 Готово: '+r.n+'!\nСтало уютнее'); markDirty(); if(view==='home') render(); }
   }
 }
 
@@ -857,15 +949,16 @@ function drawSheet(){
   if(kind==='repair'){
     const busyN = REPAIRS.filter(r => S.upg[r.id] && S.upg[r.id].state==='build' && now() < S.upg[r.id].end).length, busy = busyN >= builders();
     const bl = SHOP.find(x => x.id==='builder');
-    const nextIdx = REPAIRS.findIndex(r => !S.upg[r.id]);
-    sh.innerHTML = `<h2>Ремонт</h2><p>Каждое улучшение строится по таймеру. Когда готово — бот напишет.</p>` +
-      REPAIRS.map((r,i) => { const u = S.upg[r.id]; let btn, sub = 'строится '+fmtTime(r.t);
+    const pid = kindArg || curPlace || 'home', pl = PLACES.find(x=>x.id===pid), list = placeItems(pid);
+    const nextIdx = list.findIndex(r => !S.upg[r.id]);
+    sh.innerHTML = `<h2>${pl.e} ${pl.n}: стройка</h2><p>Каждое улучшение строится по таймеру. Когда готово — бот напишет.${builders()>1?'':' Одновременно идёт одна стройка на всей улице.'}</p>` +
+      list.map((r,i) => { const u = S.upg[r.id]; let btn, sub = 'строится '+fmtTime(r.t);
         if(u && u.state==='done') btn = '<button class="mini done" disabled>✓ Готово</button>';
         else if(u && u.state==='build'){ const left = (u.end-now())/1000; sub = left>0 ? 'осталось '+fmtTime(left) : 'готово!';
           btn = left>0 ? `<button class="mini star" data-buy="speed:${r.id}">⚡ ${Math.max(5,Math.min(50,Math.ceil(Math.ceil(left/60)/5)))} ⭐</button>` : `<button class="mini" data-finish="${r.id}">Принять</button>`; }
         else if(i===nextIdx) btn = `<button class="mini" data-build="${r.id}" ${S.coins<r.c||busy?'disabled':''}>${r.c} ${CI}</button>`;
         else btn = '<button class="mini" disabled>🔒</button>';
-        return `<div class="row">${ic('room/'+r.id, r.e)}<div class="tx"><b>${r.n}</b><span>${sub}</span></div>${btn}</div>`; }).join('') +
+        return `<div class="row">${ic((r.p==='home'?'room/':'place/')+r.id, r.e)}<div class="tx"><b>${r.n}</b><span>${sub}</span></div>${btn}</div>`; }).join('') +
       (busyN ? `<div class="row"><span class="ic">🤝</span><div class="tx"><b>Позвать соседей</b><span>Каждый друг ускорит стройку на 10%. До 5 помощей в день.</span></div><button class="mini" data-help>Позвать</button></div>` : '') +
       (bl ? `<div class="row"><span class="ic">👷</span><div class="tx"><b>${esc(bl.title)}</b><span>${esc(bl.desc)}</span></div><button class="mini star" data-buy="builder">${bl.stars} ⭐</button></div>` : (builders()>1?'<p>👷 Работают два мастера — можно строить две вещи сразу.</p>':'')) +
       `<button class="close" data-x>Закрыть</button>`;
@@ -935,11 +1028,13 @@ async function buy(sku){
 document.addEventListener('click', e => {
   const t = e.target.closest('button'); if(!t || !S) return;
   const ds = t.dataset;
-  if(ds.v){ view = ds.v; goalPick = null; render(); if(view==='home' && S.tut===3) tutStep(3); return; }
+  if(ds.place){ curPlace = ds.place; render(); return; }
+  if(ds.street!=null){ curPlace = null; render(); return; }
+  if(ds.v){ if(ds.v==='home' && view==='home') curPlace = null; view = ds.v; goalPick = null; render(); if(view==='home' && S.tut===3) tutStep(3); return; }
   if(ds.k!=null && t.classList.contains('give')){ give(+ds.k); return; }
   if(ds.c && t.classList.contains('gen')){ if(lpFired){ lpFired=false; return; } spawnFrom(ds.c); return; }
   if(ds.hero){ openSheet('hero', ds.hero); return; }
-  if(ds.open==='repair'){ openSheet('repair'); return; }
+  if(ds.open==='repair'){ openSheet('repair', curPlace||'home'); return; }
   if(ds.x!=null){ closeSheet(); return; }
   if(ds.htab){ heroTab = ds.htab; teamPick = null; render(); return; }
   if(ds.slot){ const [i,k] = ds.slot.split(':').map(Number); const h = S.teams[i][k];

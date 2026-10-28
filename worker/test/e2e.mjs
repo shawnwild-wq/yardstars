@@ -60,6 +60,10 @@ await click('[data-obhero="cat"]'); await shot('03-hero');
 await click('[data-ob="next"]'); await page.selectOption('#bdD', '15'); await page.selectOption('#bdM', '3');
 await click('[data-ob="finish"]');
 await page.waitForSelector('#board .cell'); await shot('04-kitchen');
+await page.setViewportSize({ width: 384, height: 600 }); await page.waitForTimeout(300); await shot('04s-small-window');
+const ov = await page.evaluate(() => { const b = document.getElementById('board').getBoundingClientRect(), n = document.querySelector('.nav').getBoundingClientRect(), s = document.getElementById('shelf').getBoundingClientRect(); return { boardBottom: b.bottom, shelfBottom: s.bottom, navTop: n.top }; });
+if (ov.shelfBottom > ov.navTop + 1) errors.push('small window overlap ' + JSON.stringify(ov)); else console.log('small window fits', JSON.stringify(ov));
+await page.setViewportSize({ width: 390, height: 780 }); await page.waitForTimeout(200);
 
 // spawn from generators and merge pairs by tapping
 for (let i = 0; i < 14; i++) await click('.gen[data-c="d"]');
@@ -111,7 +115,8 @@ if (srv2.heroes.dog || cd.own || cd.shards !== 10) errors.push('shard cap ' + JS
 
 // home + renovation
 await page.evaluate(() => { S.coins += 100; });
-await click('.nav [data-v="home"]'); await shot('07-home-empty');
+await click('.nav [data-v="home"]'); await shot('07a-street');
+await click('[data-place="home"]'); await shot('07-home-empty');
 await click('[data-open="repair"]'); await shot('08-repair-sheet');
 await click('[data-build="walls"]');
 await page.waitForTimeout(3200); // server save
@@ -123,6 +128,26 @@ await page.evaluate(() => { offset += 61000; tickBuilds(); });
 await shot('09-home-walls');
 for (const id of ['rug', 'sofa', 'lamp', 'table', 'shelf', 'plant', 'pictures', 'wardrobe', 'lights']) await page.evaluate((id) => { S.upg[id] = { state: 'done' }; }, id);
 await page.evaluate(() => { offset -= 61000; render(); }); await shot('10-home-full');
+// street: yard opens on level 3, its scene and own build list
+await page.evaluate(() => { S.level = Math.max(S.level, 5); S.coins += 2000; curPlace = null; render(); });
+await shot('10b-street-open');
+await click('[data-place="yard"]'); await shot('10c-yard-empty');
+await click('[data-open="repair"]');
+const yb = await page.evaluate(() => !!document.querySelector('[data-build="y_bench"]') && !document.querySelector('[data-build="rug"]'));
+if (!yb) errors.push('yard build list'); else console.log('yard has its own build list');
+await click('[data-x]');
+await page.evaluate(() => { for (const r of placeItems('yard')) S.upg[r.id] = { state: 'done' }; render(); });
+await shot('10d-yard-full');
+await page.evaluate(() => { S.level = Math.max(S.level, 20); });
+for (const pl of ['sport', 'cafe', 'park', 'market']) {
+  await page.evaluate((pl) => { for (const r of placeItems(pl)) S.upg[r.id] = { state: 'done' }; curPlace = pl; render(); }, pl);
+  await shot('10e-' + pl + '-full');
+}
+await page.evaluate(() => { for (const r of placeItems('yard')) S.upg[r.id] = { state: 'done' }; curPlace = 'yard'; render(); });
+await shot('10f-yard-full');
+await click('[data-street]');
+const sd = await page.evaluate(() => ({ list: document.querySelectorAll('.spot').length, done: placesDone() }));
+if (sd.list !== 6) errors.push('street ' + JSON.stringify(sd)); else console.log('street ok', JSON.stringify(sd));
 
 // heroes
 await page.evaluate(() => { S = JSON.parse(JSON.stringify(S)); }); await page.reload(); await page.waitForSelector('.nav');
