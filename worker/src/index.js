@@ -495,8 +495,8 @@ async function apiLoad(env, body, now) {
   let jarGift = 0;
   if (st) {
     const tz = Math.max(-840, Math.min(840, Number(body.tz) || 0));
-    const day = new Date(now + tz * 60000).toISOString().slice(0, 10);
-    const week = weekOf(now + tz * 60000);
+    const day = new Date(now + tz * 60000 - 7 * 3600000).toISOString().slice(0, 10);  // the day starts at 7:00 local
+    const week = weekOf(now + tz * 60000 - 7 * 3600000);
     let changed = false;
     if (st.jarDay !== day) {
       st.jarDay = day; st.jars = (Number(st.jars) || 0) + DAILY_JARS; jarGift = DAILY_JARS;

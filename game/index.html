@@ -280,7 +280,7 @@ const STARTERS = ['trainer','lifter','office','cat'];
 const GIFT_LEVELS = [3, 6, 10];             // уровни, на которых бесплатно приходит следующий стартовый герой
 const HERO_PRICE = { rare:300, epic:500 };  // ⭐
 const SHARDS_NEED = 10;
-// лавка за монеты: ежедневная (обновляется в полночь) и недельная (по понедельникам) — те же цифры на сервере
+// лавка за монеты: ежедневная (обновляется в 7:00) и недельная (по понедельникам) — те же цифры на сервере
 const DSHOP = { jar:{coins:80, lim:3, n:'Банка энергии', d:'+5 ⚡'}, chest:{coins:150, lim:2, n:'Сундук', d:'продукты и монеты'}, shard:{coins:120, lim:2, n:'Осколок героя', d:'случайный герой'} };
 const WSHOP = { coins:300, lim:3 };
 // миссии — те же цифры на сервере. Сброс: каждый день в 7:00, неделя — в понедельник 7:00
@@ -491,16 +491,16 @@ const heroFace = h => lookFace(h, curLook(h));
 const heroBody = h => lookBody(h, curLook(h));
 const avaIc = a => ic(`avatars/${a}`, AVATAR_EMOJI[a]||'🙂');
 const fmtTime = s => { s=Math.max(0,Math.ceil(s)); if(s<60) return s+' с'; const m=Math.ceil(s/60); if(m<60) return m+' мин'; const h=Math.floor(m/60), mm=m%60; return h+' ч'+(mm?' '+mm+' мин':''); };
-const dayKey = t => { const d=new Date(t); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
+const dayKey = t => { const d=new Date(t - 7*3600000); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
 const weekKey = t => Math.floor((t - new Date(2024,0,1).getTime())/(7*864e5));
 const fmtClock = s => { s = Math.max(0, Math.floor(s)); const d = Math.floor(s/86400), h = Math.floor(s%86400/3600), m = Math.floor(s%3600/60), x = s%60; const p = n => String(n).padStart(2,'0'); return (d ? d+'д ' : '') + p(h)+':'+p(m)+':'+p(x); };
-const nextMidnight = () => { const d = new Date(now()); d.setHours(24,0,0,0); return d.getTime(); };
+const nextMidnight = () => nextMisReset();  // всё дневное обновляется в 7:00
 const ymd = d => d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const misDay = () => ymd(new Date(now() - 7*3600000));
 const misWeek = () => { const d = new Date(now() - 7*3600000); d.setDate(d.getDate() - (d.getDay()+6)%7); return ymd(d); };
 const nextMisReset = () => { const d = new Date(now() - 7*3600000); d.setHours(0,0,0,0); d.setDate(d.getDate()+1); return d.getTime() + 7*3600000; };
 const nextMisWeek = () => { const d = new Date(misWeek()+'T00:00:00'); d.setDate(d.getDate()+7); return d.getTime() + 7*3600000; };
-const nextMonday = () => { const d = new Date(now()); d.setHours(0,0,0,0); d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7)); return d.getTime(); };
+const nextMonday = () => nextMisWeek();
 const haptic = k => { try{ const H=Telegram.WebApp.HapticFeedback; k==='ok'?H.notificationOccurred('success'):H.impactOccurred(k||'light'); }catch(e){} };
 // монета картинкой: эмодзи 🪙 не рисуется в Telegram на Windows
 const CI = '<img class="ci" src="assets/sp/coin.webp" alt="">';
@@ -1081,7 +1081,7 @@ function myGoalsHtml(){
       <button class="btn b-go" data-goalsave ${sel.length===3?'':'disabled'}>Готово (${sel.length}/3)</button></div>`;
   }
   const doneN = Object.keys(g.done).length;
-  return `<div class="panel"><h2>Цели на сегодня</h2><p>Отмечай честно — это для тебя, а не для игры. Обновляются в полночь.</p>
+  return `<div class="panel"><h2>Цели на сегодня</h2><p>Отмечай честно — это для тебя, а не для игры. Обновляются каждый день в 7:00.</p>
     ${g.picked.map(id => { const [_,e,n] = GOALS.find(x=>x[0]===id); const d = g.done[id];
       return `<div class="row">${ic('goals/'+id,e)}<div class="tx"><b>${n}</b><span>+${CONFIG.GOAL_ENERGY} ⚡</span></div>${d?'<button class="mini done" disabled>✓ Сделано</button>':`<button class="mini" data-gd="${id}">Сделал</button>`}</div>`; }).join('')}
     <div class="row"><span class="ic">🎁</span><div class="tx"><b>Все три за день</b><span>Сундук на кухню</span></div>${doneN>=3?'<button class="mini done" disabled>✓ Получен</button>':`<span class="chip">${doneN}/3</span>`}</div>
@@ -1377,7 +1377,7 @@ function birthdayCheck(){
     S.wardrobe.owned = [...new Set([...(S.wardrobe.owned||[]), 'hat:bday'+d.getFullYear()])]; WEAR_NAMES['hat:bday'+d.getFullYear()] = 'Праздничная корона '+d.getFullYear();
     markDirty(); setTimeout(()=>toast('🎂 С днём рождения, '+(S.owner.name||'сосед')+'!\nПодарок: 100 🪙 и праздничная корона, которой нет ни у кого', 5000), 800); }
 }
-let lastE = null, dayNow = new Date().toDateString();
+let lastE = null, dayNow = null;
 async function reloadState(){ if(DEMO) return; await save(); const l = await api('/api/load', { tz: -new Date().getTimezoneOffset() }); if(l._status===200 && l.state){ REV = l.rev; S = l.state; SHOP = l.shop||SHOP; normalize(); render(); if(kind) redraw(); if(l.jarGift) toast('🥫 Новый день: '+l.jarGift+' банки энергии в подарок!'); } }
 async function boot(){
   if(TG){ try{ TG.ready(); TG.expand(); TG.setHeaderColor && TG.setHeaderColor('#3a2414'); TG.setBackgroundColor && TG.setBackgroundColor('#1f5c57'); TG.disableVerticalSwipes && TG.disableVerticalSwipes(); }catch(e){} }
@@ -1400,7 +1400,7 @@ async function boot(){
     document.querySelectorAll('[data-cd]').forEach(el => { el.textContent = fmtTime(Math.max(0,(+el.dataset.cd-now())/1000)); });
     document.querySelectorAll('[data-cd2]').forEach(el => { el.textContent = fmtClock((+el.dataset.cd2-now())/1000); });
     if(kind==='energy' && S.energy !== lastE) redraw(); lastE = S.energy;
-    const dk = new Date(now()).toDateString(); if(dk !== dayNow){ dayNow = dk; reloadState(); }
+    const dk = misDay(); if(dayNow === null) dayNow = dk; else if(dk !== dayNow){ dayNow = dk; reloadState(); }
   }, 1000);
   window.addEventListener('resize', sizeBoard);
   try{ TG && TG.onEvent && TG.onEvent('viewportChanged', () => setTimeout(sizeBoard, 50)); }catch(e){}
