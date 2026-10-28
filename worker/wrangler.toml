@@ -1,0 +1,19 @@
+name = "yardstars"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+[vars]
+GAME_URL = "https://shawnwild-wq.github.io/yardstars/"
+BOT_USERNAME = "YardStarsGameBot"
+ALLOWED_ORIGIN = "*"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "yardstars"
+database_id = "D1_DATABASE_ID"   # replaced automatically by the GitHub Action
+
+[triggers]
+crons = ["* * * * *"]
+
+# Secrets (set by the GitHub Action, never written here):
+# BOT_TOKEN, OLD_BOT_TOKEN, ADMIN_ID, WEBHOOK_SECRET, SETUP_KEY
