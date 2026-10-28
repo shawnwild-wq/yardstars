@@ -153,6 +153,14 @@ if (sd.list !== 6) errors.push('street ' + JSON.stringify(sd)); else console.log
 await page.evaluate(() => { S = JSON.parse(JSON.stringify(S)); }); await page.reload(); await page.waitForSelector('.nav');
 await click('.nav [data-v="heroes"]'); await shot('11-heroes');
 await click('[data-htab="all"]'); await shot('11b-collection'); await click('[data-htab="teams"]');
+await click('[data-slot="0:0"]');
+const tk = await page.evaluate(() => ({ kind, team: S.teams[0].length }));
+if (tk.kind !== 'hero' || tk.team < 1) errors.push('slot tap ' + JSON.stringify(tk)); else console.log('team slot opens hero card');
+await shot('11c-hero-from-team'); await click('[data-x]');
+await click('[data-slot="0:' + (await page.evaluate(() => S.teams[0].length)) + '"]');
+const pk = await page.evaluate(() => kind);
+if (pk !== 'pick') errors.push('plus tap ' + pk); else console.log('plus opens picker');
+await shot('11d-pick'); await click('[data-x]');
 await click('[data-htab="all"]');
 await page.evaluate(() => { S.coins += 500; S.heroes.cat.lv = 10; });
 await click('.card[data-hero="cat"]'); await shot('12-hero-sheet');
@@ -173,7 +181,7 @@ const lk2 = await page.evaluate(() => ({ cur: curLook('lifter'), last: !!documen
 if (lk2.cur !== 'l_hair_novice' || !lk2.last) errors.push('hair by level ' + JSON.stringify(lk2)); else console.log('appearance by level + set per appearance ok');
 await shot('12c-lifter-gear'); await click('[data-x]');
 // hero stars from extra shards
-const stq = await page.evaluate(() => { S.level = 12; S.heroes.cat.lv = 3; S.shards.cat = 10; openSheet('hero','cat'); return !!document.querySelector('[data-star="cat"]'); });
+const stq = await page.evaluate(() => { S.level = 12; S.heroes.cat.lv = 3; S.shards.cat = 10; heroCardTab = 'info'; openSheet('hero','cat'); return !!document.querySelector('[data-star="cat"]'); });
 if (!stq) errors.push('no star button'); else { await click('[data-star="cat"]'); const st = await page.evaluate(() => ({ s: S.heroes.cat.stars, sh: S.shards.cat||0, v: heroSkillVal('cat') })); if (st.s !== 1 || st.sh !== 0) errors.push('star up ' + JSON.stringify(st)); else console.log('star up ok, skill', st.v.toFixed(3)); }
 await shot('12e-stars'); await click('[data-x]');
 // costume in collection adds coins to the hero
@@ -181,11 +189,18 @@ const cc = await page.evaluate(() => { S.paidLooks = [...(S.paidLooks||[]), 'c_p
 if (Math.abs(cc - .02) > 1e-9) errors.push('costume coins ' + cc); else console.log('costume coins ok');
 // repair sheet: help and second builder rows
 await page.evaluate(() => { S.upg = { walls: { state:'build', start: now(), end: now() + 60000 } }; openSheet('repair'); });
-const rp = await page.evaluate(() => ({ help: !!document.querySelector('[data-help]'), next: document.querySelector('[data-build="rug"]') && document.querySelector('[data-build="rug"]').disabled }));
-if (!rp.help || !rp.next) errors.push('repair sheet ' + JSON.stringify(rp)); else console.log('repair: help button, one builder');
-await page.evaluate(() => { S.paid = ['builder']; S.coins = 500; drawSheet(); });
-const rp2 = await page.evaluate(() => document.querySelector('[data-build="rug"]').disabled);
-if (rp2) errors.push('second builder not working'); else console.log('second builder ok');
+const rp = await page.evaluate(() => ({ help: !!document.querySelector('[data-help]'), next: !!document.querySelector('[data-build="rug"]') }));
+await click('[data-build="rug"]');
+const busy = await page.evaluate(() => ({ kind, offer: !!document.querySelector('#sheet [data-buy="builder"]'), rug: S.upg.rug }));
+if (!rp.help || !rp.next || busy.kind !== 'busy' || !busy.offer || busy.rug) errors.push('repair busy ' + JSON.stringify({rp, busy})); else console.log('repair: busy master offers second master and help');
+await shot('12g-busy');
+await page.evaluate(() => { S.paid = ['builder']; S.coins = 5; openSheet('repair'); });
+await click('[data-build="rug"]');
+const nc = await page.evaluate(() => kind);
+if (nc !== 'need') errors.push('no coins offer ' + nc); else console.log('not enough coins: offer sheet');
+await shot('12h-need-coins');
+const rp2 = await page.evaluate(() => { S.paid = ['builder']; S.coins = 500; openSheet('repair'); document.querySelector('[data-build="rug"]').click(); return S.upg.rug && S.upg.rug.state; });
+if (rp2 !== 'build') errors.push('second builder not working'); else console.log('second builder ok');
 await shot('12f-repair'); await click('[data-x]');
 await page.evaluate(() => { S.upg = {}; S.paid = []; render(); });
 // energy jars: open from the energy pill, energy goes over 100

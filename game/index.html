@@ -92,7 +92,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .fur.newly{animation:pop .6s ease-out}
 .fur.flat{transform:translate(-50%,-100%) scaleY(.5);transform-origin:50% 100%}
 .hero-in-room{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;gap:2px}
-.hero-in-room .ic{display:grid;width:100%;aspect-ratio:3/4;font-size:min(14vw,58px)}
+.hero-in-room .ic{display:grid;width:100%;aspect-ratio:4/5;font-size:min(16vw,70px);filter:drop-shadow(0 5px 4px rgba(0,0,0,.3))}
 .hero-in-room>span:not(.ic){font-size:10px;font-weight:800;color:#fff;background:rgba(58,36,20,.75);border-radius:6px;padding:1px 6px;white-space:nowrap}
 .roombar{position:absolute;left:8px;right:8px;bottom:8px;display:flex;gap:6px}
 .roombar .back{flex:0 0 auto;padding:0 12px}
@@ -124,7 +124,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .row .tx{flex:1;min-width:0}
 .row .tx b{display:block;font-size:15px;color:var(--ink)}
 .row .tx span{font-size:12px;color:var(--muted)}
-.mini{font-weight:800;font-size:13px;color:#fff;border-radius:10px;padding:8px 12px;background:var(--go);border-bottom:3px solid var(--go-d);white-space:nowrap}
+.mini.soft{opacity:.6}.mini{font-weight:800;font-size:13px;color:#fff;border-radius:10px;padding:8px 12px;background:var(--go);border-bottom:3px solid var(--go-d);white-space:nowrap}
 .mini.star{background:var(--sun);border-bottom-color:var(--sun-d);color:var(--ink)}
 .mini:disabled{background:#b9a78e;border-bottom-color:#8f7d64}
 .mini.done{background:transparent;color:var(--ok);border:0}
@@ -152,6 +152,18 @@ button.pill{border:0;font:inherit;color:inherit;cursor:pointer}
 .g3{grid-template-columns:repeat(3,1fr)}
 .rtag{display:inline-block;color:#fff;font-size:10px;font-weight:800;border-radius:6px;padding:1px 6px;vertical-align:middle}
 .sub{font-size:14px;color:var(--wood);display:block}
+.hc-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.hc-top h2{margin:0}
+.hstage{position:relative;display:grid;grid-template-columns:62px 1fr 62px;gap:6px;align-items:center;border-radius:16px;padding:8px;background:radial-gradient(ellipse at 50% 85%,rgba(255,255,255,.55) 0 22%,transparent 23%),linear-gradient(160deg,var(--rc,#8bc34a) 0%,#2b4a3f 100%);border:3px solid var(--wood)}
+.hstage .col{display:flex;flex-direction:column;gap:6px}
+.hstage .hfig{display:flex;justify-content:center;min-width:0}.hstage .hfig .ic{display:block;position:relative;width:min(100%,200px);height:auto;aspect-ratio:4/5;background:none;border:0;font-size:90px;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35))}.hstage .hfig .ic img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.hstage .hfig .ic.nf>.fb{display:grid;place-items:center;height:100%}
+.gslot{width:62px;height:62px;border-radius:12px;background:rgba(255,255,255,.88);border:2px solid #fff;display:grid;place-items:center;position:relative;padding:0}
+.gslot .ic{width:46px;height:46px;font-size:26px}
+.gslot.no .ic{filter:grayscale(1) opacity(.45)}.gslot.no{background:rgba(255,255,255,.5);border-style:dashed}
+.gslot i{position:absolute;left:0;right:0;bottom:-2px;font-style:normal;font-size:9px;font-weight:800;color:#fff;background:rgba(58,36,20,.85);border-radius:0 0 10px 10px;line-height:14px}
+.gslot.own i{background:var(--go-d)}
+.hstage .lvb{position:absolute;z-index:2;left:50%;top:6px;transform:translateX(-50%);background:rgba(58,36,20,.85);color:#fff;font-weight:800;font-size:12px;border-radius:999px;padding:2px 10px;white-space:nowrap}
+.hpow{display:flex;align-items:center;gap:8px}.hpow .bar{flex:1}
+.teambtn{display:flex;gap:6px}
 .geargrid{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}.gear{background:#fff;border:2px solid var(--cell-2);border-radius:10px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
 .gear .ic{width:38px;height:38px;font-size:24px}.gear b{font-size:9px;line-height:1.1;color:var(--ink);text-align:center}.gear span{font-size:10px;font-weight:800;color:var(--sun-d)}.gear.own{border-color:var(--go);background:#eef8e8}.gear.own span{color:var(--ok)}
 .chip{display:inline-flex;align-items:center;gap:4px;background:#fff;border:2px solid var(--cell-2);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--wood);margin:0 4px 4px 0}
@@ -699,7 +711,9 @@ function render(){
   else if(view==='heroes') body = heroesHtml();
   else if(view==='goals') body = goalsHtml();
   else if(view==='shop') body = shopHtml();
-  app.innerHTML = hud() + `<div class="screen" id="screen">${body}</div>` + navHtml();
+  const old = $('screen'), keep = old && old.dataset.v===view+(curPlace||'') ? old.scrollTop : 0;
+  app.innerHTML = hud() + `<div class="screen" id="screen" data-v="${view+(curPlace||'')}">${body}</div>` + navHtml();
+  if(keep) $('screen').scrollTop = keep;
   if(view==='kitchen') mountKitchen();
 }
 
@@ -783,7 +797,7 @@ function homeHtml(){ if(curPlace && PLACES.some(x=>x.id===curPlace) && placeOpen
 function buildStatus(id){
   const items = placeItems(id), done = items.filter(isDone).length;
   const b = items.find(r => S.upg[r.id] && S.upg[r.id].state==='build');
-  return { done, total: items.length, text: b ? (now()>=S.upg[b.id].end ? `✅ ${b.n} — готово!` : `🔨 ${b.n}: ${fmtTime((S.upg[b.id].end-now())/1000)}`) : null };
+  return { done, total: items.length, text: b ? (now()>=S.upg[b.id].end ? `✅ ${b.n} — готово!` : `🔨 ${b.n}: <i data-cd="${S.upg[b.id].end}">${fmtTime((S.upg[b.id].end-now())/1000)}</i>`) : null };
 }
 function streetHtml(){
   const cards = PLACES.map(pl => { const open = placeOpen(pl), st = buildStatus(pl.id), full = st.done===st.total;
@@ -801,8 +815,8 @@ function placeHtml(id){
   const pl = PLACES.find(x=>x.id===id);
   const fur = placeItems(id).filter(isDone).sort((a,b)=>a.pos[1]-b.pos[1])
     .map(r => `<div class="fur${justBuilt===r.id?' newly':''}" style="left:${r.pos[0]}%;top:${r.pos[1]}%;width:${r.pos[2]}%">${ic('place/'+r.id, r.e)}</div>`).join('');
-  const hs = (pl.heroes||[]).filter(ownsHero).slice(0,4); const xs = [30,70,15,85], ys = [83,83,99,99];
-  const heroes = hs.map((h,k) => `<button class="hero-in-room" data-hero="${h}" style="left:${xs[k]}%;top:${ys[k]}%;width:17%">${heroBody(h)}<span>${HEROES[h].n}</span></button>`).join('');
+  const hs = (pl.heroes||[]).filter(ownsHero).slice(0,4); const xs = [30,70,12,88], ys = [89,89,82,82];
+  const heroes = hs.map((h,k) => `<button class="hero-in-room" data-hero="${h}" style="left:${xs[k]}%;top:${ys[k]}%;width:26%">${heroBody(h)}<span>${HEROES[h].n}</span></button>`).join('');
   justBuilt = null;
   return `<div class="room outdoor"><img class="bg" src="assets/place/${id}.webp" alt="" onerror="this.classList.add('nf')"><div class="ptitle">${pl.e} ${pl.n}</div>${fur}${heroes}${placeBar(id)}</div>`;
 }
@@ -811,8 +825,8 @@ function roomHtml(){
   const Z = ['lights','pictures','wardrobe','shelf','lamp','rug','sofa','table','plant'];
   const fur = placeItems('home').filter(r => r.pos && isDone(r)).sort((x,y)=>Z.indexOf(x.id)-Z.indexOf(y.id))
     .map(r => `<div class="fur${justBuilt===r.id?' newly':''}${r.id==='rug'?' flat':''}" style="left:${r.pos[0]}%;top:${r.pos[1]}%;width:${r.pos[2]}%">${ic('room/'+r.id, r.e)}</div>`).join('');
-  const hs = (S.teams[0]||[]).slice(0,5); const xs = [18,34,50,66,82];
-  const heroes = hs.map((h,k) => `<button class="hero-in-room" data-hero="${h}" style="left:${xs[k]}%;top:${k%2?96:99}%;width:17%">${heroBody(h)}<span>${HEROES[h].n}</span></button>`).join('');
+  const hs = (S.teams[0]||[]).slice(0,5); const xs = [16,33,50,67,84];
+  const heroes = hs.map((h,k) => `<button class="hero-in-room" data-hero="${h}" style="left:${xs[k]}%;top:${k%2?83:89}%;width:24%">${heroBody(h)}<span>${HEROES[h].n}</span></button>`).join('');
   justBuilt = null;
   return `<div class="room${nice?' nice':''}"><img class="bg" src="assets/room/base${nice?1:0}.webp" alt="" onerror="this.classList.add('nf')">${fur}${heroes}${placeBar('home')}</div>`;
 }
@@ -822,7 +836,7 @@ function tickBuilds(){
     if(u && u.state==='build' && now() >= u.end){ u.state='done'; delete u.start; delete u.end; justBuilt = r.id; haptic('ok');
       const pl = PLACES.find(x=>x.id===r.p);
       if(placeDone(r.p)){ const j = place({sp:'chest'}); toast('🎉 '+pl.n+' — полностью отделано!\n+'+Math.round(PLACE_BONUS*100)+'% монет за заказы навсегда, сундук на кухне и 5 банок энергии', 5000); }
-      else toast('🔨 Готово: '+r.n+'!\nСтало уютнее'); markDirty(); if(view==='home') render(); }
+      else toast('🔨 Готово: '+r.n+'!\nСтало уютнее'); markDirty(); if(view==='home') render(); if(kind==='repair'||kind==='busy') redraw(); }
   }
 }
 
@@ -843,7 +857,7 @@ function heroesHtml(){
       return `<div class="team${open?'':' locked'}"><div class="thead">${head}</div><div class="slots">${slots}</div></div>`;
     }).join('');
     const pickList = teamPick ? `<div class="row" style="flex-direction:column;align-items:stretch"><b style="color:var(--wood)">Кого поставить?</b><div class="grid4">${ownedHeroes().filter(h=>teamOf(h)<0).map(h=>`<button class="card" data-put="${h}">${heroFace(h)}<span>${HEROES[h].n}</span></button>`).join('') || '<p>Все твои герои уже в командах. Новых — во вкладке «Коллекция».</p>'}</div></div>` : '';
-    return `<div class="panel">${tabs}<p>Заказы дают только герои из команд. Новая команда — ещё один заказ на кухне.</p>${rows}${pickList}
+    return `<div class="panel">${tabs}<p>Заказы дают только герои из команд. Нажми на героя — откроется его карточка, на «+» — выбор героя. Новая команда — ещё один заказ на кухне.</p>${rows}
       <p style="font-size:12px">Клубы: 💪 Спорт › 🏙️ Город › 🌳 Двор › 💪 Спорт — пригодится в турнирах.</p></div>`;
   }
   const byClub = Object.keys(CLUBS).map(c => {
@@ -890,26 +904,44 @@ function gearHtml(h){
     return `<div class="row"><span class="ic" style="width:40px;height:40px">${lookFace(h,setImg(curHair(h),stage))}</span><div class="tx"><b>Комплект «${esc(n)}»</b><span>${have}/${list.length} — новый вид героя и +${Math.round(SET_BONUS*100)}% монет</span></div></div>`; }).join('');
   return `<b class="sub">Экипировка · +${Math.round(gearBonus(h)*100)}% монет за заказы</b><div class="geargrid">${items}</div>${sets}`;
 }
+let heroCardTab = 'look';
+function gearSlot(h, it){ const [id,n,price,cur,b] = it, own = ((S.gear[h])||[]).includes(id);
+  return `<button class="gslot ${own?'own':'no'}" ${own?'':`data-gear="${h}:${id}"`} title="${esc(n)}">${ic('gear/'+h+'_'+id,'🎽')}<i>${own?'✓ +'+Math.round(b*100)+'%':(cur==='s'?price+'⭐':price+'🪙')}</i></button>`; }
 function heroSheet(h){
-  const d = HEROES[h], H = S.heroes[h];
-  const favs = d.fav.map(c => `<span class="chip">${LINES[c].it[2][0]} ${LINES[c].n}</span>`).join('');
-  let body = '';
+  const d = HEROES[h], H = S.heroes[h], rar = d.rar==='starter'?'common':d.rar, rc = (RARITY[rar]||RARITY.common)[1];
+  const G = GEAR[h]||[], half = Math.ceil(G.length/2), L = G.slice(0,half), R = G.slice(half);
+  const stars = H ? heroStars(h) : 0;
+  const top = `<div class="hc-top"><h2>${d.n}</h2>${rarTag(rar)}<span class="chip">${CLUBS[d.club][0]} ${CLUBS[d.club][1]}</span>${H&&stars?`<i class="stars">${starStr(stars)}</i>`:''}</div>`;
+  const stage = `<div class="hstage" style="--rc:${rc}">${H?`<span class="lvb">ур. ${H.lv}</span>`:''}
+    <div class="col">${H?L.map(it=>gearSlot(h,it)).join(''):''}</div>
+    <div class="hfig">${heroBody(h)}</div>
+    <div class="col">${H?R.map(it=>gearSlot(h,it)).join(''):''}</div></div>`;
   if(!H){
     const sh = S.shards[h]||0;
-    body = STARTERS.includes(h)
+    const how = STARTERS.includes(h)
       ? `<p>Этот сосед придёт сам — подарок за ${GIFT_LEVELS.join(', ')}-й уровень.</p>`
       : `<div class="row"><span class="ic">🧩</span><div class="tx"><b>Осколки ${sh}/${SHARDS_NEED}</b><span>из сундуков и за сюжеты</span></div></div>
          <button class="btn b-sun" data-buy="hero:${h}">Позвать сейчас · ${HERO_PRICE[d.rar]} ⭐</button>`;
-  } else {
-    const st = S.story[h]; const s = d.story;
-    const stars = heroStars(h), sh = S.shards[h]||0, cap = Math.floor(S.level/STARS_PER_LEVELS);
+    return top + stage + `<p>«${esc(d.line)}»</p>` + (SKILLS[h]?`<div class="row"><span class="ic">✨</span><div class="tx"><b>Усиление</b><span>${esc(SKILLS[h][2](SKILLS[h][1]))} на 1-м уровне, растёт с уровнем</span></div></div>`:'') + how + `<button class="close" data-x>Закрыть</button>`;
+  }
+  const ti = teamOf(h);
+  const lvl = H.lv>=CONFIG.HERO_MAX_LEVEL ? `<p><b>Максимальный уровень!</b></p>`
+    : `<div class="hpow"><b style="color:var(--wood)">ур. ${H.lv} → ${H.lv+1}</b><div class="bar"><i style="width:${Math.min(100,Math.round((H.xp||0)/heroNeed(H.lv)*100))}%"></i></div></div><p style="font-size:12px;margin-top:2px">Герой растёт от твоих заказов: ${H.xp||0}/${heroNeed(H.lv)}. Новые внешности — на 5, 15, 25-м уровне, костюмы — на 10, 20, 30-м.</p>`;
+  const skillRow = SKILLS[h] ? `<div class="row"><span class="ic">✨</span><div class="tx"><b>Усиление</b><span>${esc(SKILLS[h][2](heroSkillVal(h)))}${ti>=0&&teamOpen(ti)?' — работает':' — работает, когда герой в команде'}</span></div></div>` : '';
+  const teamRow = `<div class="teambtn">${ti>=0 ? `<span class="chip">В команде ${ti+1}</span><button class="mini soft" data-unteam="${h}">Убрать из команды</button>` : `<button class="mini" data-toteam="${h}">Поставить в команду</button>`}</div>`;
+  const gearInfo = G.length ? `<p style="font-size:12px">Экипировка по бокам: нажми на серую ячейку, чтобы купить. Каждая вещь даёт герою монеты за заказы · сейчас +${Math.round(gearBonus(h)*100)}%.</p>` : '';
+  const tabs = `<div class="tabs"><button class="${heroCardTab==='look'?'on':''}" data-htabs="look">Образ</button><button class="${heroCardTab==='info'?'on':''}" data-htabs="info">Звёзды и история</button></div>`;
+  let body;
+  if(heroCardTab==='info'){
+    const st = S.story[h], s = d.story, sh = S.shards[h]||0, cap = Math.floor(S.level/STARS_PER_LEVELS);
     const starRow = stars >= 5 ? `<div class="row"><span class="ic">⭐</span><div class="tx"><b>Звёзды <i class="stars">★★★★★</i></b><span>Максимум! Усиление ×${(1+STAR_SKILL*5).toFixed(1).replace('.',',')}</span></div></div>`
       : `<div class="row"><span class="ic">⭐</span><div class="tx"><b>Звёзды ${starStr(stars)||'—'}</b><span>Осколки ${sh}/${STAR_COST[stars]} · следующая звезда: усиление +${Math.round(STAR_SKILL*100)}%${stars>=cap?' · откроется на '+((stars+1)*STARS_PER_LEVELS)+'-м уровне':''}</span></div>${sh>=STAR_COST[stars]&&stars<cap?`<button class="mini" data-star="${h}">★ Поднять</button>`:''}</div>`;
-    body = starRow + `<div class="row"><span class="ic">🏆</span><div class="tx"><b>${esc(s.name)}</b><span>${st&&st.done?'Пройдено!':'Шаг '+((st&&st.step)||0)+' из '+s.steps.length+' — заказы в золотой рамке'}</span></div></div>` + gearHtml(h) + looksHtml(h);
-  }
-  return `<div style="display:flex;gap:12px;align-items:center"><div class="big" style="width:110px;flex:0 0 auto">${heroBody(h)}</div><div><h2>${d.n}${H?' · ур. '+H.lv:''}</h2>${H?(H.lv>=CONFIG.HERO_MAX_LEVEL?'<p>Максимальный уровень!</p>':`<div class="bar"><i style="width:${Math.min(100,Math.round((H.xp||0)/heroNeed(H.lv)*100))}%"></i></div><p style="font-size:12px">До ур. ${H.lv+1}: заказов ${H.xp||0}/${heroNeed(H.lv)}</p>`):''}
-    <p>${CLUBS[d.club][0]} ${CLUBS[d.club][1]} ${rarTag(d.rar==='starter'?'common':d.rar)}</p><p>«${esc(d.line)}»</p></div></div>
-    <div><b class="sub">Любит:</b><br>${favs}</div>${SKILLS[h]?`<div class="row"><span class="ic">✨</span><div class="tx"><b>Усиление${H?' · ур. '+H.lv:''}</b><span>${esc(SKILLS[h][2](H?heroSkillVal(h):SKILLS[h][1]))}${H?(teamOf(h)>=0&&teamOpen(teamOf(h))?' — работает':' — работает, когда герой в команде'):''}. Растёт с уровнем героя.</span></div></div>`:''}${body}<button class="close" data-x>Закрыть</button>`;
+    const favs = d.fav.map(c => `<span class="chip">${LINES[c].it[2][0]} ${LINES[c].n}</span>`).join('');
+    const sets = (GEAR_SETS[h]||[]).map(([n,list,stage]) => { const have = list.filter(x=>((S.gear[h])||[]).includes(x)).length;
+      return `<div class="row"><span class="ic" style="width:40px;height:40px">${lookFace(h,setImg(curHair(h),stage))}</span><div class="tx"><b>Комплект «${esc(n)}»</b><span>${have}/${list.length} — новый вид героя и +${Math.round(SET_BONUS*100)}% монет</span></div></div>`; }).join('');
+    body = starRow + `<div class="row"><span class="ic">🏆</span><div class="tx"><b>${esc(s.name)}</b><span>${st&&st.done?'Пройдено!':'Шаг '+((st&&st.step)||0)+' из '+s.steps.length+' — заказы в золотой рамке'}</span></div></div>` + sets + `<p>«${esc(d.line)}»</p><div><b class="sub">Любит готовить:</b>${favs}</div>`;
+  } else body = looksHtml(h) || '<p>Новые образы для этого героя скоро появятся.</p>';
+  return top + stage + lvl + teamRow + skillRow + gearInfo + tabs + body + `<button class="close" data-x>Закрыть</button>`;
 }
 
 /* ---------- цели дня ---------- */
@@ -934,16 +966,18 @@ function goalsHtml(){
 /* ---------- магазин ---------- */
 function shopHtml(){
   const icons = {starter:'🎒', jars10:'🥫', builder:'👷', coinsS:CI, coinsM:'💰', coinsL:'💰', coinsXL:'🏦', test:'🧪'};
-  const list = SHOP.filter(x => !x.id.startsWith('hero:') && !x.id.startsWith('speed:') && !x.id.startsWith('look:'));
+  const list = SHOP.filter(x => !x.id.startsWith('hero:') && !x.id.startsWith('speed:') && !x.id.startsWith('look:') && (x.id!=='test' || IS_ADMIN));
   return `<div class="panel"><h2>Магазин</h2><p>Покупки за звёзды Telegram. Всё сразу появляется в игре.</p>
     ${list.length?list.map(x=>`<div class="row"><span class="ic">${icons[x.id]||'⭐'}</span><div class="tx"><b>${esc(x.title)}</b><span>${esc(x.desc)}${x.until?' · ещё '+fmtTime((x.until-now())/1000):''}</span></div><button class="mini star" data-buy="${x.id}">${x.stars} ⭐</button></div>`).join(''):'<p>Магазин загрузится, когда откроешь игру в Telegram.</p>'}
     <p style="font-size:12px">Проблема с оплатой? Напиши боту /paysupport.</p></div>`;
 }
 
 /* ---------- шторки ---------- */
+function speedStars(id){ const u = S.upg[id]; const left = Math.max(0, (u.end-now())/1000); return Math.max(5,Math.min(50,Math.ceil(Math.ceil(left/60)/5))); }
 const bg = $('sheetBg'), sh = $('sheet'); let kind = null, kindArg = null;
-function openSheet(k, arg){ kind = k; kindArg = arg; drawSheet(); bg.hidden = false; }
+function openSheet(k, arg){ const same = kind===k && kindArg===arg; kind = k; kindArg = arg; const y = sh.scrollTop; drawSheet(); bg.hidden = false; sh.scrollTop = same ? y : 0; }
 function closeSheet(){ bg.hidden = true; kind = null; }
+function redraw(){ const y = sh.scrollTop; drawSheet(); sh.scrollTop = y; }
 bg.addEventListener('click', e => { if(e.target===bg) closeSheet(); });
 function drawSheet(){
   if(kind==='repair'){
@@ -955,8 +989,9 @@ function drawSheet(){
       list.map((r,i) => { const u = S.upg[r.id]; let btn, sub = 'строится '+fmtTime(r.t);
         if(u && u.state==='done') btn = '<button class="mini done" disabled>✓ Готово</button>';
         else if(u && u.state==='build'){ const left = (u.end-now())/1000; sub = left>0 ? 'осталось '+fmtTime(left) : 'готово!';
-          btn = left>0 ? `<button class="mini star" data-buy="speed:${r.id}">⚡ ${Math.max(5,Math.min(50,Math.ceil(Math.ceil(left/60)/5)))} ⭐</button>` : `<button class="mini" data-finish="${r.id}">Принять</button>`; }
-        else if(i===nextIdx) btn = `<button class="mini" data-build="${r.id}" ${S.coins<r.c||busy?'disabled':''}>${r.c} ${CI}</button>`;
+          if(left>0) sub = 'осталось <i data-cd="'+u.end+'">'+fmtTime(left)+'</i>';
+          btn = left>0 ? `<button class="mini star" data-buy="speed:${r.id}">⚡ ${speedStars(r.id)} ⭐</button>` : `<button class="mini" data-finish="${r.id}">Принять</button>`; }
+        else if(i===nextIdx) btn = `<button class="mini${S.coins<r.c||busy?' soft':''}" data-build="${r.id}">${r.c} ${CI}</button>`;
         else btn = '<button class="mini" disabled>🔒</button>';
         return `<div class="row">${ic((r.p==='home'?'room/':'place/')+r.id, r.e)}<div class="tx"><b>${r.n}</b><span>${sub}</span></div>${btn}</div>`; }).join('') +
       (busyN ? `<div class="row"><span class="ic">🤝</span><div class="tx"><b>Позвать соседей</b><span>Каждый друг ускорит стройку на 10%. До 5 помощей в день.</span></div><button class="mini" data-help>Позвать</button></div>` : '') +
@@ -971,6 +1006,21 @@ function drawSheet(){
       ${e?`<div class="row"><span class="ic">⚡</span><div class="tx"><b>${esc(e.title)}</b><span>${esc(e.desc)}</span></div><button class="mini star" data-buy="jars10">${e.stars} ⭐</button></div>`:''}
       <button class="close" data-x>Закрыть</button>`;
   } else if(kind==='hero'){ sh.innerHTML = heroSheet(kindArg); }
+  else if(kind==='pick'){ const i = kindArg, free = ownedHeroes().filter(h=>teamOf(h)<0);
+    sh.innerHTML = `<h2>Кого поставить в команду ${i+1}?</h2>` + (free.length ? `<div class="grid2 g3">${free.map(h=>`<button class="card" data-put="${h}">${heroFace(h)}<b>${HEROES[h].n}</b><span>ур. ${S.heroes[h].lv} · ${CLUBS[HEROES[h].club][0]}</span></button>`).join('')}</div>`
+      : `<p>Все твои герои уже в командах. Новые герои собираются из осколков — они выпадают из сундуков на кухне. Или позови героя сразу во вкладке «Коллекция».</p><button class="btn b-sun" data-htab-go="all">Открыть коллекцию</button>`) + `<button class="close" data-x>Закрыть</button>`; }
+  else if(kind==='busy'){ const bl = SHOP.find(x => x.id==='builder');
+    const cur = REPAIRS.filter(r => S.upg[r.id] && S.upg[r.id].state==='build' && now() < S.upg[r.id].end);
+    sh.innerHTML = `<h2>👷 Мастер занят</h2>` + cur.map(r => `<div class="row">${ic((r.p==='home'?'room/':'place/')+r.id, r.e)}<div class="tx"><b>${r.n}</b><span>осталось <i data-cd="${S.upg[r.id].end}">${fmtTime((S.upg[r.id].end-now())/1000)}</i></span></div><button class="mini star" data-buy="speed:${r.id}">⚡ ${speedStars(r.id)} ⭐</button></div>`).join('') +
+      `<p>Одновременно строится одна вещь на всей улице. Можно:</p>` +
+      (bl ? `<div class="row"><span class="ic">👷</span><div class="tx"><b>${esc(bl.title)}</b><span>${esc(bl.desc)}</span></div><button class="mini star" data-buy="builder">${bl.stars} ⭐</button></div>` : '') +
+      `<div class="row"><span class="ic">🤝</span><div class="tx"><b>Позвать соседей</b><span>Каждый друг ускорит стройку на 10% — бесплатно</span></div><button class="mini" data-help>Позвать</button></div>
+       <button class="close" data-x>Подожду</button>`; }
+  else if(kind==='need'){ const a = kindArg||{}, packs = SHOP.filter(x => /^coins/.test(x.id));
+    const backBtn = a.back ? `<button class="close" data-back="${a.back}${a.arg?'|'+a.arg:''}">Назад</button>` : `<button class="close" data-x>Закрыть</button>`;
+    sh.innerHTML = `<h2>Не хватает монет</h2><p>Нужно ${a.coins} ${CI}, у тебя ${S.coins} ${CI} — не хватает ${a.coins-S.coins} ${CI}.</p>
+      <div class="row"><span class="ic">🍳</span><div class="tx"><b>Заработать на кухне</b><span>Отдавай заказы соседям — за каждый монеты</span></div><button class="mini" data-go="kitchen">На кухню</button></div>` +
+      packs.map(x => `<div class="row"><span class="ic">${CI}</span><div class="tx"><b>${esc(x.title)}</b><span>${esc(x.desc)}</span></div><button class="mini star" data-buy="${x.id}">${x.stars} ⭐</button></div>`).join('') + backBtn; }
 
   else if(kind==='welcomeBack'){ const d = kindArg;
     sh.innerHTML = `<h2>С возвращением! 🎉</h2><p>Мы перенесли всё из «Береги его»:</p>
@@ -985,7 +1035,7 @@ function genSheet(){
     LINE_ORDER.map(c => { const L = LINES[c], u = lineOpen(c), gl = S.gen[c]||1, o = CONFIG.GEN_ODDS[gl-1]; let btn;
       if(!u) btn = '<button class="mini" disabled>с Котом</button>';
       else if(gl>=3) btn = '<button class="mini done" disabled>✓ Макс.</button>';
-      else btn = `<button class="mini" data-gen="${c}" ${S.coins<CONFIG.GEN_COST[gl]?'disabled':''}>${CONFIG.GEN_COST[gl]} ${CI}</button>`;
+      else btn = `<button class="mini${S.coins<CONFIG.GEN_COST[gl]?' soft':''}" data-gen="${c}">${CONFIG.GEN_COST[gl]} ${CI}</button>`;
       return `<div class="row">${u?ic('gen/'+c,L.ge):'<span class="ic">🔒</span>'}<div class="tx"><b>${L.gen} · ур. ${gl}</b><span>${L.it[0][0]} ${o[0]}% · ${L.it[1][0]} ${o[1]}%${o[2]?' · '+L.it[2][0]+' '+o[2]+'%':''}</span></div>${btn}</div>`; }).join('') +
     `<button class="close" data-x>Закрыть</button>`;
 }
@@ -1033,31 +1083,42 @@ document.addEventListener('click', e => {
   if(ds.v){ if(ds.v==='home' && view==='home') curPlace = null; view = ds.v; goalPick = null; render(); if(view==='home' && S.tut===3) tutStep(3); return; }
   if(ds.k!=null && t.classList.contains('give')){ give(+ds.k); return; }
   if(ds.c && t.classList.contains('gen')){ if(lpFired){ lpFired=false; return; } spawnFrom(ds.c); return; }
-  if(ds.hero){ openSheet('hero', ds.hero); return; }
+  if(ds.hero){ heroCardTab = 'look'; openSheet('hero', ds.hero); return; }
   if(ds.open==='repair'){ openSheet('repair', curPlace||'home'); return; }
   if(ds.x!=null){ closeSheet(); return; }
+  if(ds.back){ const [k,a] = ds.back.split('|'); openSheet(k, a||undefined); return; }
   if(ds.htab){ heroTab = ds.htab; teamPick = null; render(); return; }
+  if(ds.htabGo){ closeSheet(); view = 'heroes'; heroTab = ds.htabGo; render(); return; }
   if(ds.slot){ const [i,k] = ds.slot.split(':').map(Number); const h = S.teams[i][k];
-    if(h){ if(S.teams.flat().length<=1){ toast('В командах должен остаться хотя бы один герой'); return; } S.teams[i].splice(k,1); markDirty(); ensureOrders(); render(); return; }
-    teamPick = i; render(); return; }
-  if(ds.put){ const i = teamPick; if(i!=null && teamOpen(i) && S.teams[i].length<TEAM_SIZE && teamOf(ds.put)<0){ S.teams[i].push(ds.put); teamPick = null; markDirty(); ensureOrders(); render(); } return; }
+    if(h){ openSheet('hero', h); return; }
+    teamPick = i; openSheet('pick', i); return; }
+  if(ds.put){ const i = teamPick; if(i!=null && teamOpen(i) && S.teams[i].length<TEAM_SIZE && teamOf(ds.put)<0){ S.teams[i].push(ds.put); teamPick = null; markDirty(); ensureOrders(); closeSheet(); render(); haptic('ok'); toast(HEROES[ds.put].e+' '+HEROES[ds.put].n+' — в команде '+(i+1)); } return; }
+  if(ds.unteam){ const h = ds.unteam, i = teamOf(h); if(i<0) return; if(S.teams.flat().length<=1){ toast('В командах должен остаться хотя бы один герой'); return; }
+    S.teams[i] = S.teams[i].filter(x=>x!==h); markDirty(); ensureOrders(); redraw(); render(); toast(HEROES[h].n+' отдыхает — заказы от него не приходят'); return; }
+  if(ds.toteam){ const h = ds.toteam; if(teamOf(h)>=0) return; const i = S.teams.findIndex((t,k) => teamOpen(k) && t.length<TEAM_SIZE);
+    if(i<0){ toast('Все открытые команды заполнены. Убери кого-нибудь или открой новую команду'); return; }
+    S.teams[i].push(h); markDirty(); ensureOrders(); redraw(); render(); haptic('ok'); toast(HEROES[h].n+' — в команде '+(i+1)); return; }
+  if(ds.htabs){ heroCardTab = ds.htabs; redraw(); return; }
   if(ds.gear){ const [h,id] = ds.gear.split(':'); const it = GEAR[h].find(x=>x[0]===id); if(!it) return;
     if(it[3]==='s'){ buy('gear:'+h+':'+id); return; }
-    if(S.coins < it[2]){ toast('Не хватает монет: нужно '+it[2]+' 🪙'); return; }
+    if(S.coins < it[2]){ openSheet('need', {coins:it[2], back:'hero', arg:h}); return; }
     S.coins -= it[2]; S.gear[h] = [...new Set([...(S.gear[h]||[]), id])]; haptic('ok');
     const st = setStage(h); toast(it[1]+' — твоё! +'+Math.round(it[4]*100)+'% монет'+(st && st[1].includes(id)?'\n🎉 Комплект «'+st[0]+'» собран — новый вид героя!':''), 3200);
-    markDirty(); drawSheet(); return; }
-  if(ds.jar){ const n = Math.min(Number(ds.jar)||0, S.jars||0); if(n>0){ tickEnergy(); S.jars -= n; S.energy += n*CONFIG.JAR_ENERGY; haptic('ok'); toast('🥫 +'+(n*CONFIG.JAR_ENERGY)+' ⚡'); markDirty(); drawSheet(); render(); } return; }
-  if(ds.star){ const h = ds.star, st = heroStars(h); if(st<5 && (S.shards[h]||0) >= STAR_COST[st] && st < Math.floor(S.level/STARS_PER_LEVELS)){ S.shards[h] -= STAR_COST[st]; if(!S.shards[h]) delete S.shards[h]; S.heroes[h].stars = st+1; haptic('ok'); toast(HEROES[h].e+' '+HEROES[h].n+': '+starStr(st+1)+'\nУсиление стало сильнее!'); markDirty(); drawSheet(); render(); } return; }
+    markDirty(); redraw(); return; }
+  if(ds.jar){ const n = Math.min(Number(ds.jar)||0, S.jars||0); if(n>0){ tickEnergy(); S.jars -= n; S.energy += n*CONFIG.JAR_ENERGY; haptic('ok'); toast('🥫 +'+(n*CONFIG.JAR_ENERGY)+' ⚡'); markDirty(); redraw(); render(); } return; }
+  if(ds.star){ const h = ds.star, st = heroStars(h); if(st<5 && (S.shards[h]||0) >= STAR_COST[st] && st < Math.floor(S.level/STARS_PER_LEVELS)){ S.shards[h] -= STAR_COST[st]; if(!S.shards[h]) delete S.shards[h]; S.heroes[h].stars = st+1; haptic('ok'); toast(HEROES[h].e+' '+HEROES[h].n+': '+starStr(st+1)+'\nУсиление стало сильнее!'); markDirty(); redraw(); render(); } return; }
   if(ds.help!=null){ shareHelp(); return; }
-  if(ds.hair){ const [h,id] = ds.hair.split(':'); if(ownsLook(h,id)){ S.heroes[h].hair = id; S.heroes[h].look = 'auto'; markDirty(); drawSheet(); haptic('light'); } return; }
-  if(ds.wear){ const [h,id] = ds.wear.split(':'); if(id==='auto' || ownsLook(h,id)){ S.heroes[h].look = id; markDirty(); drawSheet(); haptic('light'); } return; }
+  if(ds.hair){ const [h,id] = ds.hair.split(':'); if(ownsLook(h,id)){ S.heroes[h].hair = id; S.heroes[h].look = 'auto'; markDirty(); redraw(); haptic('light'); } return; }
+  if(ds.wear){ const [h,id] = ds.wear.split(':'); if(id==='auto' || ownsLook(h,id)){ S.heroes[h].look = id; markDirty(); redraw(); haptic('light'); } return; }
   if(ds.buy){ buy(ds.buy); return; }
   if(ds.go){ closeSheet(); view = ds.go; render(); return; }
-  if(ds.build){ const r = REPAIRS.find(x=>x.id===ds.build); if(S.coins<r.c) return;
-    S.coins -= r.c; S.upg[r.id] = {state:'build', start:now(), end:now()+Math.round(r.t*1000*(1-Math.min(.5, skill('build'))))}; toast('🔨 Стройка началась: '+r.n); markDirty(); save(); drawSheet(); render(); return; }
-  if(ds.finish){ tickBuilds(); drawSheet(); render(); return; }
-  if(ds.gen){ const c = ds.gen, gl = S.gen[c]||1; if(gl<3 && S.coins>=CONFIG.GEN_COST[gl]){ S.coins -= CONFIG.GEN_COST[gl]; S.gen[c] = gl+1; toast(LINES[c].gen+' улучшен до ур. '+(gl+1)); markDirty(); drawSheet(); render(); } return; }
+  if(ds.build){ const r = REPAIRS.find(x=>x.id===ds.build); if(!r) return;
+    const busyN = REPAIRS.filter(x => S.upg[x.id] && S.upg[x.id].state==='build' && now() < S.upg[x.id].end).length;
+    if(busyN >= builders()){ openSheet('busy'); return; }
+    if(S.coins<r.c){ openSheet('need', {coins:r.c, back:'repair'}); return; }
+    S.coins -= r.c; S.upg[r.id] = {state:'build', start:now(), end:now()+Math.round(r.t*1000*(1-Math.min(.5, skill('build'))))}; toast('🔨 Стройка началась: '+r.n); markDirty(); save(); redraw(); render(); return; }
+  if(ds.finish){ tickBuilds(); redraw(); render(); return; }
+  if(ds.gen){ const c = ds.gen, gl = S.gen[c]||1; if(gl<3 && S.coins<CONFIG.GEN_COST[gl]){ openSheet('need', {coins:CONFIG.GEN_COST[gl], back:'gen'}); return; } if(gl<3 && S.coins>=CONFIG.GEN_COST[gl]){ S.coins -= CONFIG.GEN_COST[gl]; S.gen[c] = gl+1; toast(LINES[c].gen+' улучшен до ур. '+(gl+1)); markDirty(); redraw(); render(); } return; }
   if(ds.gp){ const a = goalPick||[]; const i = a.indexOf(ds.gp); if(i>=0) a.splice(i,1); else if(a.length<3) a.push(ds.gp); goalPick = a; render(); return; }
   if(ds.goalsave!=null){ if(goalPick && goalPick.length===3){ const changing = S.goals.picked.length===3; S.goals.picked = goalPick.slice(); if(changing) S.goals.week = weekKey(now()); goalPick = null; markDirty(); render(); } return; }
   if(ds.goalchange!=null){ goalPick = S.goals.picked.slice(); render(); return; }
@@ -1144,8 +1205,7 @@ async function boot(){
   if(S) birthdayCheck();
   setInterval(() => { if(!S) return; tickEnergy(); tickBuilds();
     if(view==='kitchen' && !drag){ const en=$('en'), et=$('enT'); if(en) en.textContent=S.energy; if(et) et.textContent = S.energy<CONFIG.ENERGY_MAX ? fmtTime((regenMs()-(now()-S.eTs)%regenMs())/1000) : ''; }
-    if(view==='home' && bg.hidden && REPAIRS.some(r=>S.upg[r.id]&&S.upg[r.id].state==='build')) render();
-    if(kind==='repair') drawSheet();
+    document.querySelectorAll('[data-cd]').forEach(el => { el.textContent = fmtTime(Math.max(0,(+el.dataset.cd-now())/1000)); });
   }, 1000);
   window.addEventListener('resize', sizeBoard);
   try{ TG && TG.onEvent && TG.onEvent('viewportChanged', () => setTimeout(sizeBoard, 50)); }catch(e){}
