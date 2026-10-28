@@ -1,0 +1,71 @@
+# Unpacks yardstars-upload.zip (if uploaded), then deploys the server to Cloudflare and the game to GitHub Pages.
+name: Deploy all
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+concurrency: { group: deploy, cancel-in-progress: false }
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack uploaded archive
+        run: |
+          if [ -f yardstars-upload.zip ]; then
+            unzip -o yardstars-upload.zip -d . && rm yardstars-upload.zip
+            git config user.name "github-actions"
+            git config user.email "github-actions@users.noreply.github.com"
+            git add -A && git commit -m "Unpack game files" && git push
+          fi
+  server:
+    needs: unpack
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: main }
+      - name: Put database id into wrangler.toml
+        working-directory: worker
+        run: sed -i "s/D1_DATABASE_ID/${{ secrets.D1_ID }}/" wrangler.toml
+      - name: Tables
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          command: d1 execute yardstars --remote --file=schema.sql
+      - name: Deploy worker + secrets
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          command: deploy
+          secrets: |
+            BOT_TOKEN
+            OLD_BOT_TOKEN
+            ADMIN_ID
+            WEBHOOK_SECRET
+            SETUP_KEY
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+          OLD_BOT_TOKEN: ${{ secrets.OLD_BOT_TOKEN }}
+          ADMIN_ID: ${{ secrets.ADMIN_ID }}
+          WEBHOOK_SECRET: ${{ secrets.WEBHOOK_SECRET }}
+          SETUP_KEY: ${{ secrets.SETUP_KEY }}
+  game:
+    needs: unpack
+    runs-on: ubuntu-latest
+    environment: { name: github-pages, url: '${{ steps.deployment.outputs.page_url }}' }
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: main }
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: game }
+      - id: deployment
+        uses: actions/deploy-pages@v4
