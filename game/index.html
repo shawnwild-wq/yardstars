@@ -737,13 +737,25 @@ let selected = null, popAt = new Set();
 const empties = () => S.board.map((b,i)=>b?-1:i).filter(i=>i>=0);
 function place(obj){ const e = empties(); if(!e.length) return -1; const i = pick(e); S.board[i] = obj; return i; }
 const itemOf = b => b.sp ? SP[b.sp] : LINES[b.c].it[b.l];
+// разная цена энергии, как в TopHeroes: удочка дороже, генератор 3-го уровня ещё +1
+const energyCost = c => (c==='f' ? 2 : 1) + ((S.gen[c]||1) >= 3 ? 1 : 0);
+// корзина Шефа: сразу 3 продукта 2-го уровня за 5 энергии
+function basket(){
+  tickEnergy(); if(S.energy < 5){ openSheet('energy'); return; }
+  if(empties().length < 3){ toast('Нужно 3 свободные клетки — соедини продукты'); return; }
+  if(S.energy >= CONFIG.ENERGY_MAX) S.eTs = now();
+  S.energy -= 5; mc('gens'); const pool = LINE_ORDER.filter(lineOpen);
+  for(let k=0;k<3;k++){ const i = place({c:pick(pool), l:1}); popAt.add(i); }
+  haptic('medium'); toast('🧺 Корзина Шефа: 3 продукта!'); markDirty(); renderKitchen();
+}
 function spawnFrom(c){
   if(!lineOpen(c)){ toast('Удочка откроется на 4-м уровне'); return; }
   tickEnergy();
-  if(S.energy <= 0){ openSheet('energy'); return; }
+  const cost = energyCost(c);
+  if(S.energy < cost){ openSheet('energy'); return; }
   if(!empties().length){ toast('Нет места — соедини одинаковые продукты'); return; }
   if(S.energy >= CONFIG.ENERGY_MAX) S.eTs = now();
-  if(Math.random() >= skill('refund')) S.energy--; mc('gens');
+  if(Math.random() >= skill('refund')) S.energy -= cost; mc('gens');
   const r = Math.random()*100, sp = CONFIG.SPECIAL, ch = sp.chest + skill('chest'); let obj;
   if(r < ch) obj = {sp:'chest'}; else if(r < ch+sp.joker) obj = {sp:'joker'}; else if(r < ch+sp.joker+sp.scis) obj = {sp:'scis'};
   else { const odds = CONFIG.GEN_ODDS[(S.gen[c]||1)-1], x = Math.random()*100; obj = {c, l: x<odds[0]?0 : x<odds[0]+odds[1]?1:2};
@@ -858,7 +870,8 @@ function renderKitchen(){
   });
   popAt.clear();
   $('shelf').innerHTML = LINE_ORDER.map(c => { const L = LINES[c], u = lineOpen(c), gl = S.gen[c]||1;
-    return `<button class="gen${u?'':' lock'}" data-c="${c}" aria-label="${L.gen}">${u?ic('gen/'+c, L.ge):'<span class="ic">🔒</span>'}<b>${L.gen}</b><small>${u?('ур. '+gl+' · 1⚡'):'с Котом'}</small></button>`; }).join('');
+    return `<button class="gen${u?'':' lock'}" data-c="${c}" aria-label="${L.gen}">${u?ic('gen/'+c, L.ge):'<span class="ic">🔒</span>'}<b>${L.gen}</b><small>${u?('ур. '+gl+' · '+energyCost(c)+'⚡'):'с Котом'}</small></button>`; }).join('')
+    + `<button class="gen basket" data-basket aria-label="Корзина Шефа">${ic('sp/chest','🧺')}<b>Корзина</b><small>3 продукта · 5⚡</small></button>`;
 }
 let drag = null;
 function bindBoard(){
@@ -1242,6 +1255,7 @@ document.addEventListener('click', e => {
   if(ds.street!=null){ curPlace = null; render(); return; }
   if(ds.v){ if(ds.v==='home' && view==='home') curPlace = null; view = ds.v; goalPick = null; render(); if(view==='home' && S.tut===3) tutStep(3); return; }
   if(ds.k!=null && t.classList.contains('give')){ give(+ds.k); return; }
+  if(ds.basket!=null){ if(lpFired){ lpFired=false; return; } basket(); return; }
   if(ds.c && t.classList.contains('gen')){ if(lpFired){ lpFired=false; return; } spawnFrom(ds.c); return; }
   if(ds.hero){ heroCardTab = 'look'; openSheet('hero', ds.hero); return; }
   if(ds.open==='repair'){ openSheet('repair', curPlace||'home'); return; }

@@ -612,7 +612,7 @@ async function apiImport(env, body, now) {
 
 /* -------------------------------------------------------------- bot logic */
 const WELCOME = (name) =>
-  `Привет${name ? ', ' + name : ''}! 👋\n\nЭто Yard Stars — твой уютный двор. Готовь вкусное для соседей-героев, ремонтируй дом и собирай всю команду.\n\nНикто здесь не умирает и не требует внимания каждую минуту. Бот напишет, только когда что-то для тебя готово.\n\nНовости и праздники: /bez_novostey — выключить, /s_novostyami — включить.`;
+  `Привет${name ? ', ' + name : ''}! 👋\n\nДобро пожаловать в Yard Stars ⭐ — двор, где живут твои герои.\n\n🍳 Готовь на кухне: соединяй продукты и выполняй заказы соседей\n🏗️ Отстраивай улицу: дом, двор, спортплощадку, кафе, парк и рынок\n🦸 Собирай команду героев, наряжай их и прокачивай\n📋 Выполняй миссии и забирай сундуки\n\nВыбери своего главного героя — и вперёд! Я напишу, когда стройка закончится или энергия восстановится.\n\nНовости: /bez_novostey — выключить, /s_novostyami — включить.`;
 const HELP =
   'Yard Stars — уютная игра про двор и соседей.\n\n🍳 Кухня: соединяй одинаковые продукты и выполняй заказы героев.\n🏠 Дом: монеты идут на ремонт.\n✅ Цели дня: позаботься о себе и получи энергию.\n\nКоманды:\n/bez_novostey — без новостей\n/s_novostyami — с новостями\n/paysupport — помощь с оплатой';
 
@@ -661,6 +661,25 @@ async function onMessage(env, m, now) {
         chat_id: uid, text: `☝️ Так увидят игроки. Получателей: ${n.c}. Отправляем?`,
         reply_markup: { inline_keyboard: [[{ text: '✅ Отправить', callback_data: 'bc:go:' + id }, { text: '✖️ Отмена', callback_data: 'bc:no:' + id }]] },
       });
+    }
+    if (cmd === '/igrok') {
+      if (!arg) return tg(env, 'sendMessage', { chat_id: uid, text: 'Напиши так: /igrok Имя  или  /igrok @username' });
+      const q = '%' + arg.replace(/^@/, '').toLowerCase() + '%';
+      const rows = (await env.DB.prepare('SELECT uid, first_name, username, state FROM players WHERE lower(first_name) LIKE ? OR lower(username) LIKE ? LIMIT 10').bind(q, q).all()).results || [];
+      const lines = rows.map((r) => { const st = safeJson(r.state) || {}; return `id ${r.uid} — ${r.first_name || '—'} (@${r.username || '—'}), ур. ${st.level || '—'}, монет ${st.coins ?? '—'}`; });
+      return tg(env, 'sendMessage', { chat_id: uid, text: lines.length ? lines.join('\n') + '\n\nПодарок: /podarok id монеты банки' : 'Никого не нашёл.' });
+    }
+    if (cmd === '/podarok') {
+      const [u, c, j, ...extra] = rest; const target = Number(u);
+      const p = target && await getPlayer(env, target); const st = p && safeJson(p.state);
+      if (!st) return tg(env, 'sendMessage', { chat_id: uid, text: 'Напиши так: /podarok id монеты банки [look:… gear:…]\nИгрок должен уже начать игру. id ищи через /igrok Имя' });
+      const coins = Math.max(0, Math.min(100000, Number(c) || 0)), jars = Math.max(0, Math.min(1000, Number(j) || 0));
+      st.coins = (Number(st.coins) || 0) + coins; st.jars = (Number(st.jars) || 0) + jars;
+      const got = []; if (coins) got.push(coins + ' монет'); if (jars) got.push(jars + ' банок энергии');
+      for (const sku of extra) { const msg = applyGrant(st, sku, now); if (msg) got.push(LOOK_NAMES[sku.slice(5)] || sku); }
+      await env.DB.prepare('UPDATE players SET state=?, rev=rev+1 WHERE uid=?').bind(JSON.stringify(st), target).run();
+      await tg(env, 'sendMessage', { chat_id: target, text: '🎁 Подарок от Yard Stars: ' + (got.join(', ') || 'сюрприз') + '!\nСпасибо, что ты с нами с самого начала 💛', reply_markup: playButton(env, 'Забрать ▶️') });
+      return tg(env, 'sendMessage', { chat_id: uid, text: 'Готово: ' + (got.join(', ') || 'ничего') + ' → id ' + target });
     }
     if (cmd === '/refund') {
       const [u, charge] = rest;

@@ -113,6 +113,10 @@ const srv2 = JSON.parse(env.DB.db.prepare('SELECT state FROM players WHERE uid=1
 const cd = await page.evaluate(() => ({ own: !!S.heroes.dog, shards: S.shards.dog }));
 if (srv2.heroes.dog || cd.own || cd.shards !== 10) errors.push('shard cap ' + JSON.stringify(cd)); else console.log('shard hero waits for level 4 (client and server agree)');
 
+// basket: 5 energy for 3 products of level 2
+const bk = await page.evaluate(() => { S.energy = 50; S.board = S.board.map(()=>null); render(); const e0 = S.energy; document.querySelector('[data-basket]').click(); return { de: e0 - S.energy, items: S.board.filter(Boolean).length, lv: S.board.filter(Boolean).every(b => b.l === 1) }; });
+if (bk.de !== 5 || bk.items !== 3 || !bk.lv) errors.push('basket ' + JSON.stringify(bk)); else console.log('basket: -5 energy, 3 products');
+await shot('06c-basket');
 // home + renovation
 await page.evaluate(() => { S.coins += 100; });
 await click('.nav [data-v="home"]'); await shot('07a-street');
