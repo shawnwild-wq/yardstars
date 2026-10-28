@@ -124,6 +124,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .pill .jarb{font-style:normal;font-size:11px;margin-left:4px;opacity:.85}
 button.pill{border:0;font:inherit;color:inherit;cursor:pointer}
 .stars{font-style:normal;color:#f5a623;letter-spacing:-1px}
+.ci{width:1.15em;height:1.15em;vertical-align:-.2em;object-fit:contain}
 .card.pick{border-color:var(--sun);box-shadow:0 0 0 3px var(--sun)}
 .card.locked{opacity:.55}
 .card .ic{width:100%;aspect-ratio:1;font-size:44px}
@@ -357,7 +358,9 @@ const fmtTime = s => { s=Math.max(0,Math.ceil(s)); if(s<60) return s+' с'; cons
 const dayKey = t => { const d=new Date(t); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
 const weekKey = t => Math.floor((t - new Date(2024,0,1).getTime())/(7*864e5));
 const haptic = k => { try{ const H=Telegram.WebApp.HapticFeedback; k==='ok'?H.notificationOccurred('success'):H.impactOccurred(k||'light'); }catch(e){} };
-let tT; function toast(m, ms){ const t=$('toast'); t.innerHTML=esc(m).replace(/\n/g,'<br>'); t.hidden=false; clearTimeout(tT); tT=setTimeout(()=>t.hidden=true, ms||2400); }
+// монета картинкой: эмодзи 🪙 не рисуется в Telegram на Windows
+const CI = '<img class="ci" src="assets/sp/coin.webp" alt="">';
+let tT; function toast(m, ms){ const t=$('toast'); t.innerHTML=esc(m).replace(/\n/g,'<br>').replace(/🪙/g, CI); t.hidden=false; clearTimeout(tT); tT=setTimeout(()=>t.hidden=true, ms||2400); }
 
 /* =====================================================================
    СЕРВЕР
@@ -642,11 +645,12 @@ function mountKitchen(){
   boardEl = $('board');
   for(let i=0;i<N;i++){ const d=document.createElement('div'); d.className='cell'; d.dataset.i=i; boardEl.appendChild(d); }
   bindBoard(); sizeBoard(); renderKitchen();
+  if(window.ResizeObserver){ const ro = new ResizeObserver(() => sizeBoard()); ro.observe($('bw')); }
 }
 function sizeBoard(){
   const bw = $('bw'); if(!bw || !boardEl) return;
   const w = bw.clientWidth-22, h = bw.clientHeight-26;
-  const c = Math.max(30, Math.floor(Math.min((w-5*4)/CONFIG.COLS, (h-6*4)/CONFIG.ROWS)));
+  const c = Math.max(22, Math.floor(Math.min((w-5*4)/CONFIG.COLS, (h-6*4)/CONFIG.ROWS)));
   boardEl.style.setProperty('--c', c+'px');
 }
 function renderKitchen(){
@@ -659,7 +663,7 @@ function renderKitchen(){
     let tag = '';
     if(o.story){ const s = h.story, st = S.story[o.hero]||{step:0}; tag = `<div class="tag" title="${esc(s.name)}">Сюжет ${st.step+1}/${s.steps.length}</div>`; }
     const need = o.items.map((x,j)=>`<div class="${m[j]>=0?'have':''}" title="${esc(LINES[x.c].it[x.l][1])}">${itemIc(x.c,x.l)}</div>`).join('');
-    return `<div class="order${o.story?' story':''}">${tag}<div class="who">${heroFace(o.hero)}<span>${h.n}</span></div><div class="need">${need}</div><button class="give" ${ok?'':'disabled'} data-k="${k}">Отдать · ${o.reward} 🪙</button></div>`;
+    return `<div class="order${o.story?' story':''}">${tag}<div class="who">${heroFace(o.hero)}<span>${h.n}</span></div><div class="need">${need}</div><button class="give" ${ok?'':'disabled'} data-k="${k}">Отдать · ${o.reward} ${CI}</button></div>`;
   }).join('');
   const hint = new Set(), s = selected!=null ? S.board[selected] : null;
   if(s) S.board.forEach((b,i)=>{ if(i===selected||!b) return;
@@ -789,7 +793,7 @@ function gearHtml(h){
   const G = GEAR[h]; if(!G) return '<p>Экипировка для этого героя скоро появится.</p>';
   const g = (S.gear[h])||[];
   const items = G.map(([id,n,price,cur,b]) => { const own = g.includes(id);
-    return `<button class="gear${own?' own':''}" ${own?'disabled':`data-gear="${h}:${id}"`}>${ic('gear/'+h+'_'+id,'🎽')}<b>${esc(n)}</b><span>${own?'+'+Math.round(b*100)+'% ✓':(cur==='s'?price+' ⭐':price+' 🪙')}</span></button>`; }).join('');
+    return `<button class="gear${own?' own':''}" ${own?'disabled':`data-gear="${h}:${id}"`}>${ic('gear/'+h+'_'+id,'🎽')}<b>${esc(n)}</b><span>${own?'+'+Math.round(b*100)+'% ✓':(cur==='s'?price+' ⭐':price+' ${CI}')}</span></button>`; }).join('');
   const sets = (GEAR_SETS[h]||[]).map(([n,list,stage]) => { const have = list.filter(x=>g.includes(x)).length;
     return `<div class="row"><span class="ic" style="width:40px;height:40px">${lookFace(h,setImg(curHair(h),stage))}</span><div class="tx"><b>Комплект «${esc(n)}»</b><span>${have}/${list.length} — новый вид героя и +${Math.round(SET_BONUS*100)}% монет</span></div></div>`; }).join('');
   return `<b class="sub">Экипировка · +${Math.round(gearBonus(h)*100)}% монет за заказы</b><div class="geargrid">${items}</div>${sets}`;
@@ -837,7 +841,7 @@ function goalsHtml(){
 
 /* ---------- магазин ---------- */
 function shopHtml(){
-  const icons = {starter:'🎒', jars10:'🥫', builder:'👷', coinsS:'🪙', coinsM:'💰', coinsL:'💰', coinsXL:'🏦', test:'🧪'};
+  const icons = {starter:'🎒', jars10:'🥫', builder:'👷', coinsS:CI, coinsM:'💰', coinsL:'💰', coinsXL:'🏦', test:'🧪'};
   const list = SHOP.filter(x => !x.id.startsWith('hero:') && !x.id.startsWith('speed:') && !x.id.startsWith('look:'));
   return `<div class="panel"><h2>Магазин</h2><p>Покупки за звёзды Telegram. Всё сразу появляется в игре.</p>
     ${list.length?list.map(x=>`<div class="row"><span class="ic">${icons[x.id]||'⭐'}</span><div class="tx"><b>${esc(x.title)}</b><span>${esc(x.desc)}${x.until?' · ещё '+fmtTime((x.until-now())/1000):''}</span></div><button class="mini star" data-buy="${x.id}">${x.stars} ⭐</button></div>`).join(''):'<p>Магазин загрузится, когда откроешь игру в Telegram.</p>'}
@@ -859,7 +863,7 @@ function drawSheet(){
         if(u && u.state==='done') btn = '<button class="mini done" disabled>✓ Готово</button>';
         else if(u && u.state==='build'){ const left = (u.end-now())/1000; sub = left>0 ? 'осталось '+fmtTime(left) : 'готово!';
           btn = left>0 ? `<button class="mini star" data-buy="speed:${r.id}">⚡ ${Math.max(5,Math.min(50,Math.ceil(Math.ceil(left/60)/5)))} ⭐</button>` : `<button class="mini" data-finish="${r.id}">Принять</button>`; }
-        else if(i===nextIdx) btn = `<button class="mini" data-build="${r.id}" ${S.coins<r.c||busy?'disabled':''}>${r.c} 🪙</button>`;
+        else if(i===nextIdx) btn = `<button class="mini" data-build="${r.id}" ${S.coins<r.c||busy?'disabled':''}>${r.c} ${CI}</button>`;
         else btn = '<button class="mini" disabled>🔒</button>';
         return `<div class="row">${ic('room/'+r.id, r.e)}<div class="tx"><b>${r.n}</b><span>${sub}</span></div>${btn}</div>`; }).join('') +
       (busyN ? `<div class="row"><span class="ic">🤝</span><div class="tx"><b>Позвать соседей</b><span>Каждый друг ускорит стройку на 10%. До 5 помощей в день.</span></div><button class="mini" data-help>Позвать</button></div>` : '') +
@@ -877,7 +881,7 @@ function drawSheet(){
 
   else if(kind==='welcomeBack'){ const d = kindArg;
     sh.innerHTML = `<h2>С возвращением! 🎉</h2><p>Мы перенесли всё из «Береги его»:</p>
-      <div class="row"><span class="ic">🪙</span><div class="tx"><b>${d.coins} монет</b><span>твои накопления</span></div></div>
+      <div class="row"><span class="ic">${CI}</span><div class="tx"><b>${d.coins} монет</b><span>твои накопления</span></div></div>
       <div class="row"><span class="ic">👕</span><div class="tx"><b>${d.items.length} вещей</b><span>они в гардеробе на вкладке «Герои»</span></div></div>
       <div class="row"><span class="ic">🎁</span><div class="tx"><b>Подарок старожилу</b><span>200 монет, 2 сундука и значок «Первый сосед»</span></div></div>
       <button class="close" data-x>Спасибо!</button>`; }
@@ -888,7 +892,7 @@ function genSheet(){
     LINE_ORDER.map(c => { const L = LINES[c], u = lineOpen(c), gl = S.gen[c]||1, o = CONFIG.GEN_ODDS[gl-1]; let btn;
       if(!u) btn = '<button class="mini" disabled>с Котом</button>';
       else if(gl>=3) btn = '<button class="mini done" disabled>✓ Макс.</button>';
-      else btn = `<button class="mini" data-gen="${c}" ${S.coins<CONFIG.GEN_COST[gl]?'disabled':''}>${CONFIG.GEN_COST[gl]} 🪙</button>`;
+      else btn = `<button class="mini" data-gen="${c}" ${S.coins<CONFIG.GEN_COST[gl]?'disabled':''}>${CONFIG.GEN_COST[gl]} ${CI}</button>`;
       return `<div class="row">${u?ic('gen/'+c,L.ge):'<span class="ic">🔒</span>'}<div class="tx"><b>${L.gen} · ур. ${gl}</b><span>${L.it[0][0]} ${o[0]}% · ${L.it[1][0]} ${o[1]}%${o[2]?' · '+L.it[2][0]+' '+o[2]+'%':''}</span></div>${btn}</div>`; }).join('') +
     `<button class="close" data-x>Закрыть</button>`;
 }
@@ -1049,6 +1053,7 @@ async function boot(){
     if(kind==='repair') drawSheet();
   }, 1000);
   window.addEventListener('resize', sizeBoard);
+  try{ TG && TG.onEvent && TG.onEvent('viewportChanged', () => setTimeout(sizeBoard, 50)); }catch(e){}
 }
 boot();
 </script>
