@@ -666,9 +666,11 @@ async function onMessage(env, m, now) {
       });
     }
     if (cmd === '/igrok') {
-      if (!arg) return tg(env, 'sendMessage', { chat_id: uid, text: 'Напиши так: /igrok Имя  или  /igrok @username' });
-      const q = '%' + arg.replace(/^@/, '').toLowerCase() + '%';
-      const rows = (await env.DB.prepare('SELECT uid, first_name, username, state FROM players WHERE lower(first_name) LIKE ? OR lower(username) LIKE ? LIMIT 10').bind(q, q).all()).results || [];
+      // без имени — последние 10 игроков; SQLite не меняет регистр русских букв, поэтому ищем и как написано, и с заглавной, и строчными
+      const a0 = arg.replace(/^@/, ''), cap = a0.charAt(0).toUpperCase() + a0.slice(1).toLowerCase();
+      const rows = (arg
+        ? await env.DB.prepare('SELECT uid, first_name, username, state FROM players WHERE first_name LIKE ?1 OR first_name LIKE ?2 OR first_name LIKE ?3 OR lower(username) LIKE ?3 LIMIT 10').bind('%' + a0 + '%', '%' + cap + '%', '%' + a0.toLowerCase() + '%').all()
+        : await env.DB.prepare('SELECT uid, first_name, username, state FROM players ORDER BY last_seen DESC LIMIT 10').all()).results || [];
       const lines = rows.map((r) => { const st = safeJson(r.state) || {}; return `id ${r.uid} — ${r.first_name || '—'} (@${r.username || '—'}), ур. ${st.level || '—'}, монет ${st.coins ?? '—'}`; });
       return tg(env, 'sendMessage', { chat_id: uid, text: lines.length ? lines.join('\n') + '\n\nПодарок: /podarok id монеты банки' : 'Никого не нашёл.' });
     }
