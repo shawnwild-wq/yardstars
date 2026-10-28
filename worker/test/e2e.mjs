@@ -212,7 +212,7 @@ if (ej.j !== 0 || ej.e < 113) errors.push('jars ' + JSON.stringify(ej)); else co
 await click('[data-x]');
 // skills: trainer in team speeds up regen
 const sk = await page.evaluate(() => { S.heroes.trainer = S.heroes.trainer || {lv:1,xp:0}; S.heroes.trainer.lv = 20; if(teamOf('trainer')<0) S.teams[0].push('trainer'); return { ms: regenMs(), txt: SKILLS.trainer[2](heroSkillVal('trainer')) }; });
-if (Math.abs(sk.ms - 100000) > 1) errors.push('regen skill ' + JSON.stringify(sk)); else console.log('skill:', sk.txt);
+if (Math.abs(sk.ms - 250000) > 1) errors.push('regen skill ' + JSON.stringify(sk)); else console.log('skill:', sk.txt);
 await page.evaluate(() => { delete S.heroes.lifter; delete S.gear.lifter; render(); });
 
 // goals
@@ -247,6 +247,26 @@ await page.reload(); await page.waitForSelector('.nav'); await shot('17-reload')
 const lvl = await page.evaluate(() => ({ coins: S.coins, upg: Object.keys(S.upg).length, hero: S.firstHero, owner: S.owner }));
 console.log('after reload', JSON.stringify(lvl));
 if (lvl.hero !== 'cat') errors.push('progress lost on reload');
+
+// free energy twice a day + shop tabs (server filled them on load)
+const f0 = await page.evaluate(() => ({ left: S.freeLeft, d: S.dshop, w: S.wshop && Object.keys(S.wshop.left).length }));
+if (f0.left !== 2 || !f0.d || f0.w !== 3) errors.push('daily fields ' + JSON.stringify(f0)); else console.log('free energy and shops filled by server');
+await page.evaluate(() => { S.energy = 10; render(); });
+await click('[data-energy]'); await shot('18-energy-sheet');
+await click('[data-free]');
+const f1 = await page.evaluate(() => ({ e: S.energy, left: S.freeLeft }));
+if (f1.left !== 1 || f1.e < 40) errors.push('free claim ' + JSON.stringify(f1)); else console.log('free claim +30');
+await click('[data-shopgo="daily"]'); await shot('19-shop-daily');
+await page.evaluate(() => { S.coins = 1000; render(); });
+const j0 = await page.evaluate(() => S.jars || 0);
+await click('[data-dbuy="jar"]');
+const j1 = await page.evaluate(() => ({ jars: S.jars, left: S.dshop.jar, coins: S.coins }));
+if (j1.jars !== j0 + 1 || j1.left !== 2) errors.push('daily jar ' + JSON.stringify(j1)); else console.log('daily shop jar bought');
+await click('[data-stab="coins"]'); await shot('20-shop-coins');
+await click('[data-stab="stars"]'); await shot('21-shop-stars');
+await page.waitForTimeout(3200);
+const srv3 = JSON.parse(env.DB.db.prepare('SELECT state FROM players WHERE uid=1001').get().state);
+if (srv3.freeLeft !== 1 || srv3.dshop.jar !== 2) errors.push('server free/shop ' + JSON.stringify({ f: srv3.freeLeft, d: srv3.dshop })); else console.log('server accepted free claim and daily purchase');
 
 console.log(errors.length ? '\nERRORS:\n' + errors.join('\n') : '\nno errors');
 await browser.close();

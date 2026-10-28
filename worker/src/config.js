@@ -1,7 +1,7 @@
 // Yard Stars — server-side economy and shop. All balance numbers live here.
 export const ECON = {
   ENERGY_MAX: 100,
-  ENERGY_REGEN_MS: 2 * 60 * 1000,      // +1 energy every 2 minutes
+  ENERGY_REGEN_MS: 5 * 60 * 1000,      // +1 energy every 5 minutes (full 100 in ~8 h 20 min)
   GOAL_ENERGY: 10,                     // per daily goal (max 3 a day)
   LEVEL_ENERGY: 10,                    // per level up
   COIN_EARN_PER_MIN: 80,               // sanity cap for coins earned between saves
@@ -110,6 +110,7 @@ export const SKUS = {
              give: { coins: 300, jars: 20, chests: 2, items: ['top:ys_hoodie'] } },
   builder:  { title: 'Второй мастер', desc: 'Два ремонта одновременно — навсегда', stars: 300, once: true, give: {} },
   jars10:   { title: '10 банок энергии', desc: '+5 ⚡ каждая, хранятся без предела', stars: 20, give: { jars: 10 } },
+  jars50:   { title: 'Выгодный набор энергии', desc: '50 банок (+250 ⚡) и сундук — в 2 раза выгоднее', stars: 60, give: { jars: 50, chests: 1 } },
   coinsS:   { title: '100 монет', desc: 'Горсть монет', stars: 25, give: { coins: 100 } },
   coinsM:   { title: '550 монет', desc: 'Мешочек монет (+10%)', stars: 100, give: { coins: 550 } },
   coinsL:   { title: '1200 монет', desc: 'Сундучок монет (+20%)', stars: 200, give: { coins: 1200 } },
@@ -200,3 +201,14 @@ export const STAR_SKILL = 0.2;
 export const STARS_PER_LEVELS = 5;
 // Neighbour help: each help cuts 10% of the build time (at least 2 min); 5 helps a day per player; helper gets a jar for up to 3 helps a day.
 export const HELPS = { CUT: 0.1, MIN_MS: 2 * 60 * 1000, PER_DAY: 5, REWARD_PER_DAY: 3 };
+
+// Free energy: claim twice a day (like TopHeroes «Получите бесплатно»)
+export const FREE_ENERGY = 30, FREE_PER_DAY = 2;
+// Daily shop for coins: refreshed every local day, limits per day
+export const DSHOP = {
+  jar:   { coins: 80,  lim: 3, title: 'Банка энергии' },
+  chest: { coins: 150, lim: 2, title: 'Сундук' },
+  shard: { coins: 120, lim: 2, title: 'Осколок героя' },
+};
+// Weekly shop for coins: 3 heroes rotate every week, shards of the chosen hero
+export const WSHOP = { coins: 300, lim: 3, heroes: 3 };

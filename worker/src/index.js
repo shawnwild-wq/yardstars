@@ -1,6 +1,6 @@
 // Yard Stars — Cloudflare Worker: game API, Telegram bot, Stars payments, notifications.
 import { ECON, REPAIRS, REPAIR_NAMES, SKUS, HEROES, HERO_PRICE, HERO_NAMES, GIFT_LEVELS, SHARD_HEROES_PER_LEVELS, TEAM_OPEN, TEAM_SIZE,
-  speedPrice, LOOKS, LOOK_NAMES, lookInfo, GEAR_STARS, HAIR, HAIR_LEVELS, costumeLevel, HERO_MAX_LEVEL, JAR_ENERGY, DAILY_JARS, SERVER_SKILLS, STAR_COST, STAR_SKILL, STARS_PER_LEVELS, HELPS, PLACE_OF, PLACE_JARS } from './config.js';
+  speedPrice, LOOKS, LOOK_NAMES, lookInfo, GEAR_STARS, HAIR, HAIR_LEVELS, costumeLevel, HERO_MAX_LEVEL, JAR_ENERGY, DAILY_JARS, SERVER_SKILLS, STAR_COST, STAR_SKILL, STARS_PER_LEVELS, HELPS, PLACE_OF, PLACE_JARS, FREE_ENERGY, FREE_PER_DAY, DSHOP, WSHOP } from './config.js';
 
 const DAY = 24 * 3600 * 1000;
 const HOUR = 3600 * 1000;
@@ -127,6 +127,7 @@ export function sanitize(prev, next, now, prevSavedAt) {
     out.heroes = Object.fromEntries(hs.map((h) => [h, { lv: 1, xp: 0 }]));
     out.teams = [hs, [], [], []]; out.gear = {}; out.shards = {}; out.jars = 0;
     for (const f of SERVER_FIELDS) delete out[f];
+    delete out.freeLeft; delete out.dshop; delete out.wshop;
     out.createdAt = now;
     return out;
   }
@@ -153,12 +154,28 @@ export function sanitize(prev, next, now, prevSavedAt) {
     out.goals = ng;
   }
 
+  // daily/weekly limits and free energy: the server refills them, the game can only use them up
+  const used = (pv, nv) => { const a = Math.max(0, Number(pv) || 0); const b = Math.max(0, Math.min(a, Math.floor(Number(nv)))); return Number.isFinite(b) ? b : a; };
+  let freeUsed = 0, jarBought = 0, spent = 0;
+  if (prev.freeLeft !== undefined) { out.freeLeft = used(prev.freeLeft, out.freeLeft); freeUsed = prev.freeLeft - out.freeLeft; } else delete out.freeLeft;
+  if (prev.dshop && typeof prev.dshop === 'object') {
+    const n = out.dshop && typeof out.dshop === 'object' ? out.dshop : {}, d = {};
+    for (const k of Object.keys(DSHOP)) { d[k] = used(prev.dshop[k], n[k]); const b = (Number(prev.dshop[k]) || 0) - d[k]; spent += b * DSHOP[k].coins; if (k === 'jar') jarBought = b; }
+    out.dshop = d;
+  } else delete out.dshop;
+  if (prev.wshop && typeof prev.wshop === 'object') {
+    const n = out.wshop && out.wshop.left && typeof out.wshop.left === 'object' ? out.wshop.left : {}, left = {};
+    for (const h of Object.keys(prev.wshop.left || {})) { left[h] = used(prev.wshop.left[h], n[h]); spent += ((Number(prev.wshop.left[h]) || 0) - left[h]) * WSHOP.coins; }
+    out.wshop = { week: prev.wshop.week, left };
+  } else delete out.wshop;
+  if (spent) out.coins = Math.max(0, Math.min(out.coins, Math.floor(maxCoins - spent)));
+
   // energy
   const { e } = regenEnergy(prev, now);
-  // jars: only the server adds them; the game can only open (spend) them
-  const pj = Math.max(0, Number(prev.jars) || 0);
+  // jars: only the server adds them (or the daily shop); the game can only open (spend) them
+  const pj = Math.max(0, Number(prev.jars) || 0) + jarBought;
   out.jars = Math.max(0, Math.min(Math.floor(Number(out.jars) || 0), pj));
-  const upper = e + (pj - out.jars) * JAR_ENERGY + goalsGain * (ECON.GOAL_ENERGY + Math.floor(skillVal(prev, 'goalE')))
+  const upper = e + freeUsed * FREE_ENERGY + (pj - out.jars) * JAR_ENERGY + goalsGain * (ECON.GOAL_ENERGY + Math.floor(skillVal(prev, 'goalE')))
     + levelGain * (ECON.LEVEL_ENERGY + Math.floor(skillVal(prev, 'levelE'))) + 2;
   out.energy = Math.max(0, Math.min(Math.floor(Number(out.energy) || 0), upper));
   out.eTs = Math.max(Number(prev.eTs) || 0, Math.min(Number(out.eTs) || now, now));
@@ -403,6 +420,14 @@ async function apiAuth(env, body) {
   return user;
 }
 
+// week number (Monday-based) and the heroes on sale that week
+function weekOf(t) { return Math.floor((t / 86400000 + 3) / 7); }
+function weekHeroes(week) {
+  const pool = Object.keys(HEROES).filter((h) => HEROES[h] !== 'starter');
+  const out = []; let i = (week * 5) % pool.length;
+  while (out.length < WSHOP.heroes) { out.push(pool[i % pool.length]); i += 3; }
+  return [...new Set(out)];
+}
 async function apiLoad(env, body, now) {
   const user = await apiAuth(env, body);
   if (!user) return json(env, { error: 'auth' }, 401);
@@ -433,8 +458,15 @@ async function apiLoad(env, body, now) {
   if (st) {
     const tz = Math.max(-840, Math.min(840, Number(body.tz) || 0));
     const day = new Date(now + tz * 60000).toISOString().slice(0, 10);
+    const week = weekOf(now + tz * 60000);
+    let changed = false;
     if (st.jarDay !== day) {
       st.jarDay = day; st.jars = (Number(st.jars) || 0) + DAILY_JARS; jarGift = DAILY_JARS;
+      st.freeLeft = FREE_PER_DAY; st.dshop = Object.fromEntries(Object.keys(DSHOP).map((k) => [k, DSHOP[k].lim]));
+      changed = true;
+    }
+    if (!st.wshop || st.wshop.week !== week) { st.wshop = { week, left: Object.fromEntries(weekHeroes(week).map((h) => [h, WSHOP.lim])) }; changed = true; }
+    if (changed) {
       await env.DB.prepare('UPDATE players SET state=?, rev=rev+1 WHERE uid=?').bind(JSON.stringify(st), user.id).run();
       p = await getPlayer(env, user.id);
     }
@@ -462,7 +494,7 @@ async function apiSave(env, body, now) {
   await env.DB.prepare('UPDATE players SET state=?, rev=?, last_seen=? WHERE uid=?').bind(JSON.stringify(st), rev, now, user.id).run();
   await rescheduleAlerts(env, user.id, st, now);
   // tell the client only what the server corrected
-  return json(env, { ok: true, rev, now, fix: { coins: st.coins, energy: st.energy, eTs: st.eTs, jars: st.jars, level: st.level, upg: st.upg, heroes: st.heroes } });
+  return json(env, { ok: true, rev, now, fix: { coins: st.coins, energy: st.energy, eTs: st.eTs, jars: st.jars, level: st.level, upg: st.upg, heroes: st.heroes, freeLeft: st.freeLeft, dshop: st.dshop, wshop: st.wshop } });
 }
 
 async function apiInvoice(env, body, now) {

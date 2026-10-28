@@ -152,6 +152,26 @@ button.pill{border:0;font:inherit;color:inherit;cursor:pointer}
 .g3{grid-template-columns:repeat(3,1fr)}
 .rtag{display:inline-block;color:#fff;font-size:10px;font-weight:800;border-radius:6px;padding:1px 6px;vertical-align:middle}
 .sub{font-size:14px;color:var(--wood);display:block}
+.sbanner{position:relative;min-height:118px;border-radius:14px;overflow:hidden;background:linear-gradient(120deg,#ffcf6b,#f08a3c 60%,#b8562a);border:3px solid var(--wood);display:flex;align-items:flex-end;padding:10px}
+.sbanner .ic{position:absolute;right:4px;bottom:-6px;width:128px;height:150px;font-size:80px;filter:drop-shadow(0 4px 4px rgba(0,0,0,.3))}
+.sbanner h2{position:absolute;left:12px;top:8px;color:#fff!important;text-shadow:0 2px 0 rgba(58,36,20,.6)}
+.sbanner .wal{display:flex;gap:6px;position:relative}.sbanner .wal span{background:rgba(58,36,20,.78);color:#fff;font-weight:800;border-radius:999px;padding:3px 10px;display:inline-flex;align-items:center;gap:4px;font-size:14px}.sbanner .wal .ic{position:static;width:18px;height:18px;font-size:14px;filter:none}
+.stimer{text-align:center;background:var(--cell-2);color:var(--wood);font-weight:800;border-radius:10px;padding:6px;font-size:14px}
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.scard{background:#fff;border:3px solid var(--cell-2);border-radius:14px;padding:6px 4px 8px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center;min-width:0}
+.scard b{font-size:12px;line-height:1.15;color:var(--wood);min-height:28px;display:flex;align-items:center}
+.scard .box{width:68px;height:68px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(160deg,#c9a26b,#8b5a2b);border:3px solid var(--wood);position:relative}
+.scard .box.p{background:linear-gradient(160deg,#c48af0,#7e3fb8)}.scard .box.b{background:linear-gradient(160deg,#7fc4ff,#2f78c9)}.scard .box.g{background:linear-gradient(160deg,#ffd76a,#e09a1c)}
+.scard .box .ic{width:52px;height:52px;font-size:36px}.scard .box i{position:absolute;right:-4px;bottom:-4px;font-style:normal;font-weight:800;font-size:11px;color:#fff;background:var(--wood);border-radius:8px;padding:0 5px}
+.scard small{font-size:11px;color:var(--muted);font-weight:700}
+.scard .pb{width:100%;background:var(--sky);border-bottom:4px solid var(--sky-d);color:#fff;font-weight:800;border-radius:10px;padding:6px 2px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:3px}
+.scard .pb.star{background:var(--sun);border-bottom-color:var(--sun-d);color:var(--ink)}
+.scard .pb .ic{width:16px;height:16px;font-size:13px}
+.scard.out{opacity:.55}.scard.out .pb{background:#9aa;border-bottom-color:#788}
+.ebox{background:#fff;border:2px solid var(--cell-2);border-radius:14px;padding:10px;display:flex;gap:10px;align-items:center}
+.ebox .big{font-size:40px;width:56px;height:56px;border-radius:12px;background:linear-gradient(160deg,#7fc4ff,#2f78c9);display:grid;place-items:center;border:3px solid var(--wood)}
+.ebox .tx{flex:1;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--wood);font-weight:700}
+.ebar{position:relative;height:20px;border-radius:999px;background:#d9cbb3;overflow:hidden}.ebar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(#8fd35a,#5ea83a)}.ebar span{position:relative;display:block;text-align:center;font-weight:800;font-size:12px;line-height:20px;color:var(--ink)}
 .hc-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.hc-top h2{margin:0}
 .hstage{position:relative;display:grid;grid-template-columns:62px 1fr 62px;gap:6px;align-items:center;border-radius:16px;padding:8px;background:radial-gradient(ellipse at 50% 85%,rgba(255,255,255,.55) 0 22%,transparent 23%),linear-gradient(160deg,var(--rc,#8bc34a) 0%,#2b4a3f 100%);border:3px solid var(--wood)}
 .hstage .col{display:flex;flex-direction:column;gap:6px}
@@ -197,7 +217,7 @@ input,select{font-family:inherit;font-size:16px;border:2px solid var(--cell-2);b
 const CONFIG = {
   API: 'https://yardstars.shawnwild.workers.dev', BOT: 'YardStarsGameBot',
   COLS: 6, ROWS: 7,
-  ENERGY_MAX: 100, ENERGY_REGEN_MS: 2*60*1000, GOAL_ENERGY: 10, LEVEL_ENERGY: 10, JAR_ENERGY: 5,
+  ENERGY_MAX: 100, ENERGY_REGEN_MS: 5*60*1000, FREE_ENERGY: 30, FREE_PER_DAY: 2, GOAL_ENERGY: 10, LEVEL_ENERGY: 10, JAR_ENERGY: 5,
   XP_PER_LEVEL: 60,                        // уровень N требует 60×N^1.6 опыта (дальше — дольше)
   GEN_COST: [0, 200, 600],                 // улучшение генератора до ур.2 / ур.3
   GEN_ODDS: [[90,10,0],[70,27,3],[55,35,10]],
@@ -241,6 +261,9 @@ const STARTERS = ['trainer','lifter','office','cat'];
 const GIFT_LEVELS = [3, 6, 10];             // уровни, на которых бесплатно приходит следующий стартовый герой
 const HERO_PRICE = { rare:300, epic:500 };  // ⭐
 const SHARDS_NEED = 10;
+// лавка за монеты: ежедневная (обновляется в полночь) и недельная (по понедельникам) — те же цифры на сервере
+const DSHOP = { jar:{coins:80, lim:3, n:'Банка энергии', d:'+5 ⚡'}, chest:{coins:150, lim:2, n:'Сундук', d:'продукты и монеты'}, shard:{coins:120, lim:2, n:'Осколок героя', d:'случайный герой'} };
+const WSHOP = { coins:300, lim:3 };
 const TEAM_SIZE = 5, TEAM_OPEN = [{lvl:1}, {lvl:10, stars:300}, {lvl:20, stars:600}, {lvl:30, stars:900}];
 /* усиления героев: работают, когда герой стоит в открытой команде; сила = per × уровень героя */
 const SKILLS = {
@@ -436,6 +459,9 @@ const avaIc = a => ic(`avatars/${a}`, AVATAR_EMOJI[a]||'🙂');
 const fmtTime = s => { s=Math.max(0,Math.ceil(s)); if(s<60) return s+' с'; const m=Math.ceil(s/60); if(m<60) return m+' мин'; const h=Math.floor(m/60), mm=m%60; return h+' ч'+(mm?' '+mm+' мин':''); };
 const dayKey = t => { const d=new Date(t); return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate(); };
 const weekKey = t => Math.floor((t - new Date(2024,0,1).getTime())/(7*864e5));
+const fmtClock = s => { s = Math.max(0, Math.floor(s)); const d = Math.floor(s/86400), h = Math.floor(s%86400/3600), m = Math.floor(s%3600/60), x = s%60; const p = n => String(n).padStart(2,'0'); return (d ? d+'д ' : '') + p(h)+':'+p(m)+':'+p(x); };
+const nextMidnight = () => { const d = new Date(now()); d.setHours(24,0,0,0); return d.getTime(); };
+const nextMonday = () => { const d = new Date(now()); d.setHours(0,0,0,0); d.setDate(d.getDate() + ((8 - d.getDay()) % 7 || 7)); return d.getTime(); };
 const haptic = k => { try{ const H=Telegram.WebApp.HapticFeedback; k==='ok'?H.notificationOccurred('success'):H.impactOccurred(k||'light'); }catch(e){} };
 // монета картинкой: эмодзи 🪙 не рисуется в Telegram на Windows
 const CI = '<img class="ci" src="assets/sp/coin.webp" alt="">';
@@ -479,7 +505,12 @@ function applyFix(sent, fix){
   for(const id in S.upg){ if(!fix.upg[id] && JSON.stringify(S.upg[id])===JSON.stringify(sent.upg[id])) delete S.upg[id]; }
   for(const h in S.heroes){ if(!fix.heroes[h] && sent.heroes[h]) delete S.heroes[h]; }
   for(const h in fix.heroes){ if(!S.heroes[h]) S.heroes[h] = fix.heroes[h]; }
-  render();
+  const d = (a,b) => (Number(a)||0) - (Number(b)||0);
+  if(fix.jars!==undefined && fix.jars!==sent.jars) S.jars = Math.max(0, (S.jars||0) + d(fix.jars, sent.jars));
+  if(fix.freeLeft!==undefined) S.freeLeft = Math.max(0, (S.freeLeft ?? fix.freeLeft) + d(fix.freeLeft, sent.freeLeft ?? fix.freeLeft)); else delete S.freeLeft;
+  if(fix.dshop){ S.dshop = S.dshop||{}; for(const k in fix.dshop) S.dshop[k] = Math.max(0, (S.dshop[k] ?? fix.dshop[k]) + d(fix.dshop[k], (sent.dshop||{})[k] ?? fix.dshop[k])); }
+  if(fix.wshop){ if(!S.wshop || S.wshop.week!==fix.wshop.week) S.wshop = fix.wshop; else for(const h in fix.wshop.left) S.wshop.left[h] = Math.max(0, (S.wshop.left[h] ?? fix.wshop.left[h]) + d(fix.wshop.left[h], ((sent.wshop||{}).left||{})[h] ?? fix.wshop.left[h])); }
+  render(); if(kind) redraw();
 }
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ clearTimeout(saveT); save(true); } });
 setInterval(()=>{ if(dirty) save(); }, 30000);
@@ -711,9 +742,9 @@ function render(){
   else if(view==='heroes') body = heroesHtml();
   else if(view==='goals') body = goalsHtml();
   else if(view==='shop') body = shopHtml();
-  const old = $('screen'), keep = old && old.dataset.v===view+(curPlace||'') ? old.scrollTop : 0;
+  const old = $('screen'), oldP = old && old.querySelector('.panel'), keep = old && old.dataset.v===view+(curPlace||'') ? (oldP ? oldP.scrollTop : old.scrollTop) : 0;
   app.innerHTML = hud() + `<div class="screen" id="screen" data-v="${view+(curPlace||'')}">${body}</div>` + navHtml();
-  if(keep) $('screen').scrollTop = keep;
+  if(keep){ const np = $('screen').querySelector('.panel'); if(np) np.scrollTop = keep; else $('screen').scrollTop = keep; }
   if(view==='kitchen') mountKitchen();
 }
 
@@ -964,12 +995,35 @@ function goalsHtml(){
 }
 
 /* ---------- магазин ---------- */
+let shopTab = 'stars';
+function scard(title, box, cls, lim, btn, out){ return `<div class="scard${out?' out':''}"><b>${title}</b><div class="box ${cls||''}">${box}</div>${lim?`<small>${lim}</small>`:''}${btn}</div>`; }
 function shopHtml(){
-  const icons = {starter:'🎒', jars10:'🥫', builder:'👷', coinsS:CI, coinsM:'💰', coinsL:'💰', coinsXL:'🏦', test:'🧪'};
-  const list = SHOP.filter(x => !x.id.startsWith('hero:') && !x.id.startsWith('speed:') && !x.id.startsWith('look:') && (x.id!=='test' || IS_ADMIN));
-  return `<div class="panel"><h2>Магазин</h2><p>Покупки за звёзды Telegram. Всё сразу появляется в игре.</p>
-    ${list.length?list.map(x=>`<div class="row"><span class="ic">${icons[x.id]||'⭐'}</span><div class="tx"><b>${esc(x.title)}</b><span>${esc(x.desc)}${x.until?' · ещё '+fmtTime((x.until-now())/1000):''}</span></div><button class="mini star" data-buy="${x.id}">${x.stars} ⭐</button></div>`).join(''):'<p>Магазин загрузится, когда откроешь игру в Telegram.</p>'}
-    <p style="font-size:12px">Проблема с оплатой? Напиши боту /paysupport.</p></div>`;
+  const chef = ic('heroes/looks/chef_a', '👨‍🍳');
+  const head = `<div class="sbanner">${chef}<h2>Лавка Шефа</h2><div class="wal"><span>${CI} ${S.coins}</span><span>🥫 ${S.jars||0}</span></div></div>
+    <div class="tabs"><button class="${shopTab==='stars'?'on':''}" data-stab="stars">За звёзды</button><button class="${shopTab==='daily'?'on':''}" data-stab="daily">Ежедневный</button><button class="${shopTab==='coins'?'on':''}" data-stab="coins">За монеты</button></div>`;
+  let body = '';
+  if(shopTab==='stars'){
+    const icons = {starter:'🎒', jars10:ic('sp/jar','🥫'), jars50:'⚡', builder:'👷', coinsS:ic('sp/coin','🪙'), coinsM:ic('sp/coin','💰'), coinsL:'💰', coinsXL:'🏦', test:'🧪'};
+    const cls = {starter:'g', jars50:'p', builder:'b', coinsXL:'g', coinsL:'g'};
+    const list = SHOP.filter(x => !x.id.startsWith('hero:') && !x.id.startsWith('speed:') && !x.id.startsWith('look:') && (x.id!=='test' || IS_ADMIN));
+    body = list.length ? `<div class="sgrid">${list.map(x => scard(esc(x.title), `<span class="ic" style="font-size:34px">${icons[x.id]||'⭐'}</span>`, cls[x.id]||'', esc(x.desc)+(x.until?' · ещё '+fmtTime((x.until-now())/1000):''), `<button class="pb star" data-buy="${x.id}">${x.stars} ⭐</button>`)).join('')}</div>`
+      : '<p>Магазин загрузится, когда откроешь игру в Telegram.</p>';
+  } else if(shopTab==='daily'){
+    const D = S.dshop;
+    body = `<div class="stimer">Обновится через <i data-cd2="${nextMidnight()}">${fmtClock((nextMidnight()-now())/1000)}</i></div>` + (D ? `<div class="sgrid">${Object.keys(DSHOP).map(k => { const it = DSHOP[k], left = D[k]||0;
+      const box = k==='jar' ? ic('sp/jar','🥫') : k==='chest' ? ic('sp/chest','🎁') : '<span class="ic">🧩</span>';
+      return scard(it.n, box, k==='shard'?'p':k==='chest'?'g':'b', `Лимит: ${left}/${it.lim} · ${it.d}`, left ? `<button class="pb" data-dbuy="${k}">${CI} ${it.coins}</button>` : '<button class="pb" disabled>Завтра</button>', !left); }).join('')}</div>`
+      : '<p>Ежедневная лавка откроется при следующем входе в игру.</p>');
+  } else {
+    const W = S.wshop;
+    const heroCards = W ? Object.keys(W.left).map(h => { const left = W.left[h]||0;
+      return scard('Осколок: '+esc(HEROES[h].n), heroFace(h), 'p', `Лимит: ${left}/${WSHOP.lim}${ownsHero(h)?' · для звёзд':' · '+(S.shards[h]||0)+'/'+SHARDS_NEED}`, left ? `<button class="pb" data-wbuy="${h}">${CI} ${WSHOP.coins}</button>` : '<button class="pb" disabled>Через неделю</button>', !left); }).join('') : '';
+    const gens = LINE_ORDER.filter(lineOpen).map(c => { const L = LINES[c], gl = S.gen[c]||1;
+      return scard(esc(L.gen)+' · ур. '+gl, ic('gen/'+c, L.ge), 'b', gl>=3 ? 'Максимум' : 'Чаще продукты выше уровнем', gl>=3 ? '<button class="pb" disabled>✓</button>' : `<button class="pb" data-gen="${c}">${CI} ${CONFIG.GEN_COST[gl]}</button>`, gl>=3); }).join('');
+    body = (W ? `<div class="stimer">Герои недели · обновятся через <i data-cd2="${nextMonday()}">${fmtClock((nextMonday()-now())/1000)}</i></div><div class="sgrid">${heroCards}</div>` : '') +
+      `<b class="sub">Улучшить генераторы</b><div class="sgrid">${gens}</div>`;
+  }
+  return `<div class="panel">${head}${body}<p style="font-size:12px">Проблема с оплатой? Напиши боту /paysupport.</p></div>`;
 }
 
 /* ---------- шторки ---------- */
@@ -998,12 +1052,19 @@ function drawSheet(){
       (bl ? `<div class="row"><span class="ic">👷</span><div class="tx"><b>${esc(bl.title)}</b><span>${esc(bl.desc)}</span></div><button class="mini star" data-buy="builder">${bl.stars} ⭐</button></div>` : (builders()>1?'<p>👷 Работают два мастера — можно строить две вещи сразу.</p>':'')) +
       `<button class="close" data-x>Закрыть</button>`;
   } else if(kind==='energy'){
-    const e = SHOP.find(x=>x.id==='jars10'), J = S.jars||0;
-    sh.innerHTML = `<h2>${S.energy>0?'Энергия':'Энергия закончилась'}</h2><p>Энергия восстанавливается сама: +1 каждые ${regenMs()>=60000 ? (Math.round(regenMs()/6000)/10).toString().replace('.',',')+' мин' : Math.round(regenMs()/1000)+' сек'}.${skill('regen')?' Тренер в команде ускоряет её.':''} Банки энергии хранятся без предела и могут поднять энергию выше 100.</p>
-      <div class="row">${ic('sp/jar','🥫')}<div class="tx"><b>Банки энергии: ${J}</b><span>+${CONFIG.JAR_ENERGY} ⚡ каждая · 2 банки в подарок каждый день</span></div>${J?`<button class="mini" data-jar="1">Открыть</button>`:''}</div>
+    tickEnergy();
+    const e = SHOP.find(x=>x.id==='jars10'), big = SHOP.find(x=>x.id==='jars50'), J = S.jars||0, F = S.freeLeft ?? 0, rm = regenMs();
+    const full = S.energy < CONFIG.ENERGY_MAX ? S.eTs + (CONFIG.ENERGY_MAX - S.energy) * rm : 0, next = S.energy < CONFIG.ENERGY_MAX ? S.eTs + rm : 0;
+    sh.innerHTML = `<h2>${S.energy>0?'Энергия':'Энергия закончилась'}</h2>
+      <div class="ebox"><div class="big">⚡</div><div class="tx"><span>${full ? `+1 ⚡ через <i data-cd2="${next}">${fmtClock((next-now())/1000)}</i> · полная через <i data-cd2="${full}">${fmtClock((full-now())/1000)}</i>` : 'Энергия полная — вперёд на кухню!'}</span>
+        <div class="ebar"><i style="width:${Math.min(100, S.energy/CONFIG.ENERGY_MAX*100)}%"></i><span>${S.energy}/${CONFIG.ENERGY_MAX}</span></div></div></div>
+      <div class="row"><span class="ic">🎁</span><div class="tx"><b>+${CONFIG.FREE_ENERGY} ⚡ бесплатно</b><span>Осталось на сегодня: ${F}/${CONFIG.FREE_PER_DAY}</span></div>${F>0?`<button class="mini" data-free>Забрать</button>`:'<button class="mini" disabled>Завтра</button>'}</div>
+      <div class="row">${ic('sp/jar','🥫')}<div class="tx"><b>Банки энергии: ${J}</b><span>+${CONFIG.JAR_ENERGY} ⚡ каждая · 2 в подарок каждый день</span></div>${J?`<button class="mini" data-jar="1">Открыть</button>`:''}</div>
       ${J>1?`<button class="btn b-go" data-jar="${J}">Открыть все · +${J*CONFIG.JAR_ENERGY} ⚡</button>`:''}
       <div class="row"><span class="ic">✅</span><div class="tx"><b>Цели дня</b><span>+${CONFIG.GOAL_ENERGY + Math.floor(skill('goalE'))} ⚡ за каждую</span></div><button class="mini" data-go="goals">Открыть</button></div>
-      ${e?`<div class="row"><span class="ic">⚡</span><div class="tx"><b>${esc(e.title)}</b><span>${esc(e.desc)}</span></div><button class="mini star" data-buy="jars10">${e.stars} ⭐</button></div>`:''}
+      <div class="row"><span class="ic">🛍️</span><div class="tx"><b>Лавка Шефа</b><span>Банки энергии за монеты — каждый день</span></div><button class="mini" data-shopgo="daily">Идти</button></div>
+      ${big?`<div class="row"><span class="ic">⚡</span><div class="tx"><b>${esc(big.title)}</b><span>${esc(big.desc)}</span></div><button class="mini star" data-buy="jars50">${big.stars} ⭐</button></div>`:''}
+      ${e?`<div class="row">${ic('sp/jar','🥫')}<div class="tx"><b>${esc(e.title)}</b><span>${esc(e.desc)}</span></div><button class="mini star" data-buy="jars10">${e.stars} ⭐</button></div>`:''}
       <button class="close" data-x>Закрыть</button>`;
   } else if(kind==='hero'){ sh.innerHTML = heroSheet(kindArg); }
   else if(kind==='pick'){ const i = kindArg, free = ownedHeroes().filter(h=>teamOf(h)<0);
@@ -1108,6 +1169,21 @@ document.addEventListener('click', e => {
   if(ds.jar){ const n = Math.min(Number(ds.jar)||0, S.jars||0); if(n>0){ tickEnergy(); S.jars -= n; S.energy += n*CONFIG.JAR_ENERGY; haptic('ok'); toast('🥫 +'+(n*CONFIG.JAR_ENERGY)+' ⚡'); markDirty(); redraw(); render(); } return; }
   if(ds.star){ const h = ds.star, st = heroStars(h); if(st<5 && (S.shards[h]||0) >= STAR_COST[st] && st < Math.floor(S.level/STARS_PER_LEVELS)){ S.shards[h] -= STAR_COST[st]; if(!S.shards[h]) delete S.shards[h]; S.heroes[h].stars = st+1; haptic('ok'); toast(HEROES[h].e+' '+HEROES[h].n+': '+starStr(st+1)+'\nУсиление стало сильнее!'); markDirty(); redraw(); render(); } return; }
   if(ds.help!=null){ shareHelp(); return; }
+  if(ds.stab){ shopTab = ds.stab; render(); return; }
+  if(ds.shopgo){ closeSheet(); view = 'shop'; shopTab = ds.shopgo; render(); return; }
+  if(ds.free!=null){ if((S.freeLeft||0) > 0){ tickEnergy(); S.freeLeft--; S.energy += CONFIG.FREE_ENERGY; haptic('ok'); toast('🎁 +'+CONFIG.FREE_ENERGY+' ⚡'); markDirty(); save(); redraw(); render(); } return; }
+  if(ds.dbuy){ const k = ds.dbuy, it = DSHOP[k]; if(!S.dshop || !(S.dshop[k] > 0)) return;
+    if(S.coins < it.coins){ openSheet('need', {coins:it.coins}); return; }
+    if(k==='chest' && !empties().length){ toast('Нет места на кухне — освободи клетку для сундука'); return; }
+    let msg = '';
+    if(k==='shard'){ const h = randomShardHero(); if(!h){ toast('Все герои уже собраны'); return; } addShard(h, 1); msg = '🧩 Осколок: '+HEROES[h].e+' '+HEROES[h].n; }
+    S.coins -= it.coins; S.dshop[k]--;
+    if(k==='jar'){ S.jars = (S.jars||0) + 1; msg = '🥫 +1 банка энергии'; }
+    if(k==='chest'){ place({sp:'chest'}); msg = '🎁 Сундук на кухне!'; }
+    haptic('ok'); toast(msg); markDirty(); save(); render(); return; }
+  if(ds.wbuy){ const h = ds.wbuy; if(!S.wshop || !(S.wshop.left[h] > 0)) return;
+    if(S.coins < WSHOP.coins){ openSheet('need', {coins:WSHOP.coins}); return; }
+    S.coins -= WSHOP.coins; S.wshop.left[h]--; addShard(h, 1); haptic('ok'); toast('🧩 Осколок: '+HEROES[h].e+' '+HEROES[h].n); markDirty(); save(); render(); return; }
   if(ds.hair){ const [h,id] = ds.hair.split(':'); if(ownsLook(h,id)){ S.heroes[h].hair = id; S.heroes[h].look = 'auto'; markDirty(); redraw(); haptic('light'); } return; }
   if(ds.wear){ const [h,id] = ds.wear.split(':'); if(id==='auto' || ownsLook(h,id)){ S.heroes[h].look = id; markDirty(); redraw(); haptic('light'); } return; }
   if(ds.buy){ buy(ds.buy); return; }
@@ -1118,7 +1194,7 @@ document.addEventListener('click', e => {
     if(S.coins<r.c){ openSheet('need', {coins:r.c, back:'repair'}); return; }
     S.coins -= r.c; S.upg[r.id] = {state:'build', start:now(), end:now()+Math.round(r.t*1000*(1-Math.min(.5, skill('build'))))}; toast('🔨 Стройка началась: '+r.n); markDirty(); save(); redraw(); render(); return; }
   if(ds.finish){ tickBuilds(); redraw(); render(); return; }
-  if(ds.gen){ const c = ds.gen, gl = S.gen[c]||1; if(gl<3 && S.coins<CONFIG.GEN_COST[gl]){ openSheet('need', {coins:CONFIG.GEN_COST[gl], back:'gen'}); return; } if(gl<3 && S.coins>=CONFIG.GEN_COST[gl]){ S.coins -= CONFIG.GEN_COST[gl]; S.gen[c] = gl+1; toast(LINES[c].gen+' улучшен до ур. '+(gl+1)); markDirty(); redraw(); render(); } return; }
+  if(ds.gen){ const c = ds.gen, gl = S.gen[c]||1; if(gl<3 && S.coins<CONFIG.GEN_COST[gl]){ openSheet('need', {coins:CONFIG.GEN_COST[gl], back:'gen'}); return; } if(gl<3 && S.coins>=CONFIG.GEN_COST[gl]){ S.coins -= CONFIG.GEN_COST[gl]; S.gen[c] = gl+1; toast(LINES[c].gen+' улучшен до ур. '+(gl+1)); markDirty(); if(kind) redraw(); render(); } return; }
   if(ds.gp){ const a = goalPick||[]; const i = a.indexOf(ds.gp); if(i>=0) a.splice(i,1); else if(a.length<3) a.push(ds.gp); goalPick = a; render(); return; }
   if(ds.goalsave!=null){ if(goalPick && goalPick.length===3){ const changing = S.goals.picked.length===3; S.goals.picked = goalPick.slice(); if(changing) S.goals.week = weekKey(now()); goalPick = null; markDirty(); render(); } return; }
   if(ds.goalchange!=null){ goalPick = S.goals.picked.slice(); render(); return; }
@@ -1187,6 +1263,8 @@ function birthdayCheck(){
     S.wardrobe.owned = [...new Set([...(S.wardrobe.owned||[]), 'hat:bday'+d.getFullYear()])]; WEAR_NAMES['hat:bday'+d.getFullYear()] = 'Праздничная корона '+d.getFullYear();
     markDirty(); setTimeout(()=>toast('🎂 С днём рождения, '+(S.owner.name||'сосед')+'!\nПодарок: 100 🪙 и праздничная корона, которой нет ни у кого', 5000), 800); }
 }
+let lastE = null, dayNow = new Date().toDateString();
+async function reloadState(){ if(DEMO) return; await save(); const l = await api('/api/load', { tz: -new Date().getTimezoneOffset() }); if(l._status===200 && l.state){ REV = l.rev; S = l.state; SHOP = l.shop||SHOP; normalize(); render(); if(kind) redraw(); if(l.jarGift) toast('🥫 Новый день: '+l.jarGift+' банки энергии в подарок!'); } }
 async function boot(){
   if(TG){ try{ TG.ready(); TG.expand(); TG.setHeaderColor && TG.setHeaderColor('#3a2414'); TG.setBackgroundColor && TG.setBackgroundColor('#1f5c57'); TG.disableVerticalSwipes && TG.disableVerticalSwipes(); }catch(e){} }
   if(DEMO){
@@ -1206,6 +1284,9 @@ async function boot(){
   setInterval(() => { if(!S) return; tickEnergy(); tickBuilds();
     if(view==='kitchen' && !drag){ const en=$('en'), et=$('enT'); if(en) en.textContent=S.energy; if(et) et.textContent = S.energy<CONFIG.ENERGY_MAX ? fmtTime((regenMs()-(now()-S.eTs)%regenMs())/1000) : ''; }
     document.querySelectorAll('[data-cd]').forEach(el => { el.textContent = fmtTime(Math.max(0,(+el.dataset.cd-now())/1000)); });
+    document.querySelectorAll('[data-cd2]').forEach(el => { el.textContent = fmtClock((+el.dataset.cd2-now())/1000); });
+    if(kind==='energy' && S.energy !== lastE) redraw(); lastE = S.energy;
+    const dk = new Date(now()).toDateString(); if(dk !== dayNow){ dayNow = dk; reloadState(); }
   }, 1000);
   window.addEventListener('resize', sizeBoard);
   try{ TG && TG.onEvent && TG.onEvent('viewportChanged', () => setTimeout(sizeBoard, 50)); }catch(e){}
