@@ -17,11 +17,15 @@ args = [a for a in sys.argv[1:] if not a.startswith('--') and a != PREVIEW]
 ROOT = args[0] if args else os.path.join(os.path.dirname(__file__), '..', 'game', 'assets', 'heroes', 'looks')
 
 
+# у чёрного кота кремовая грудка в чёрном меху — со стороны неотличима от окошка фона
+POCKET_SKIP = ('c_c',)
+
+
 def light(rgb, lo=200, sat=40):
     return (rgb.min(2) > lo) & ((rgb.max(2) - rgb.min(2)) < sat)
 
 
-def clean(arr):
+def clean(arr, name=''):
     rgb = arr[:, :, :3].astype(int)
     a = arr[:, :, 3]
     empty = a < 40
@@ -48,6 +52,20 @@ def clean(arr):
     # кусочки подложки, прижатые к контуру (их закрыла утолщённая стена) — снять, если рядом уже снятый фон
     near = ndimage.binary_dilation(gone, iterations=3) & light(rgb, 160, 60) & ~dark & ~empty
     gone |= near
+    # замкнутые «окошки» фона внутри фигуры (между рукой и телом, вокруг бутылей): светлое пятно,
+    # почти со всех сторон обведённое чёрным контуром. Белый мех, китель, кроссовки граничат с цветными тенями — их не трогаем
+    pk = light(rgb, 215, 35) & ~empty & ~gone
+    pl, pn = ndimage.label(pk)
+    hh, ww = pk.shape
+    for i in range(pn):
+        c = pl == i + 1
+        if c.sum() < 0.0008 * hh * ww:
+            continue
+        ring = ndimage.binary_dilation(c, iterations=3) & ~ndimage.binary_dilation(c, iterations=1)
+        px = rgb[c]
+        warm = 9 <= np.median(px[:, 0] - px[:, 2]) <= 26      # фон кремовый (≈252,247,235); одежда — чисто-белая или голубоватая
+        if dark[ring].mean() > 0.7 and warm and px.mean(1).std() < 7.5 and not name.startswith(POCKET_SKIP):
+            gone |= c
     out = arr.copy()
     out[gone, 3] = 0
     edge = ndimage.binary_dilation(gone, iterations=1) & ~gone
@@ -56,12 +74,12 @@ def clean(arr):
 
 
 def main():
-    files = sorted(glob.glob(os.path.join(ROOT, '*.webp')))
+    files = sorted(glob.glob(os.path.join(ROOT, '**', '*.webp'), recursive=True))
     changed = 0
     tiles = []
     for f in files:
         arr = np.array(Image.open(f).convert('RGBA'))
-        out, gone = clean(arr)
+        out, gone = clean(arr, os.path.basename(f))
         if gone.sum() < 30:
             continue
         changed += 1

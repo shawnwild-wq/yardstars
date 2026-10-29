@@ -318,6 +318,31 @@ const ord = await page.evaluate(() => {
 });
 if (ord.kinds < 6 || ord.fromTeam < 90 || ord.fromTeam > 210 || ord.paid <= 0 || ord.ownsAfter) errors.push('orders from all ' + JSON.stringify(ord)); else console.log('orders from all characters', JSON.stringify(ord));
 
+// signature dishes: every hero has one, all its products exist, a dish order pays 1.5x and can be given
+const dish = await page.evaluate(() => {
+  view = 'kitchen'; render(); S.level = Math.max(S.level, 6); const bad = HERO_IDS.filter((h) => !DISH[h] || DISH[h].items.some(([c, l]) => !LINES[c] || !LINES[c].it[l]));
+  const o = mkDish('strongman'); S.orders[1] = o; S.board = S.board.map(() => null); o.items.forEach((x) => place({ c: x.c, l: x.l })); renderKitchen();
+  const card = !!document.querySelector('.order.dishy .dish'); const c0 = S.coins; give(1);
+  let seen = 0; for (let i = 0; i < 400; i++) { const x = mkOrder(); if (x && x.dish) seen++; }
+  return { bad, card, paid: S.coins - c0, reward: o.reward, seen, lines: LINE_ORDER.length, gens: document.querySelectorAll('#shelf .gen').length };
+});
+if (dish.bad.length || !dish.card || dish.paid < dish.reward || dish.seen < 30 || dish.lines !== 6) errors.push('dishes ' + JSON.stringify(dish)); else console.log('signature dishes', JSON.stringify(dish));
+await page.evaluate(() => { view = 'kitchen'; S.orders[0] = mkDish('cat'); S.orders[1] = mkDish('trainer'); S.orders[2] = mkDish('strongman'); render(); });
+await shot('23-kitchen-dishes');
+
+// sound: avatar opens settings, toggles are remembered, music zone follows the screen, effects do not throw
+await page.evaluate(() => { closeSheet(); view = 'kitchen'; render(); });
+await click('.hud [data-sound]'); await shot('24-sound');
+const snd = await page.evaluate(() => {
+  const z = []; for (const v of ['kitchen', 'heroes']) { view = v; render(); z.push(zoneOf()); }
+  view = 'home'; curPlace = 'home'; render(); z.push(zoneOf()); curPlace = null; render(); z.push(zoneOf());
+  ['tap', 'pop', 'merge', 'coins', 'level', 'built', 'chest', 'buy', 'nope'].forEach((n) => Sound.play(n, 3));
+  openSheet('sound'); const musicRow = !!document.querySelector('[data-snd="music"]'); document.querySelector('[data-snd="sfx"]').click();
+  return { zones: z.join(','), musicRow, sfx: Sound.prefs.sfx, saved: JSON.parse(localStorage.getItem('ys_audio') || '{}').sfx };
+});
+if (snd.zones !== 'kitchen,menu,home,street' || snd.musicRow || snd.sfx !== false || snd.saved !== false) errors.push('sound ' + JSON.stringify(snd)); else console.log('sound', JSON.stringify(snd));
+await page.evaluate(() => { Sound.set('sfx', true); closeSheet(); });
+
 // pictures: no cut furniture, no bits of neighbouring pictures (tools/check_assets.py)
 { const { spawnSync } = await import('node:child_process');
   const r = spawnSync('python3', ['-I', new URL('../../tools/check_assets.py', import.meta.url).pathname], { encoding: 'utf8' });

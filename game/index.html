@@ -30,8 +30,9 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .ic.nf img{display:none}.ic.nf>.fb{display:block}
 /* HUD */
 .hud{display:flex;gap:6px;align-items:center;background:var(--wood);border:3px solid var(--wood-edge);border-radius:14px;padding:5px 7px;color:var(--cream)}
-.ava{width:34px;height:34px;border-radius:50%;background:var(--cream);border:2px solid var(--gold);overflow:hidden;flex:0 0 auto;font-size:20px}
+.ava{padding:0;cursor:pointer;width:34px;height:34px;border-radius:50%;background:var(--cream);border:2px solid var(--gold);overflow:hidden;flex:0 0 auto;font-size:20px}
 .ava .ic{width:100%;height:100%}
+.ava{position:relative;overflow:visible}.ava .ic{border-radius:50%;overflow:hidden}.ava::after{content:'🔊';position:absolute;right:-5px;bottom:-4px;font-size:11px;line-height:1;background:var(--cream);border-radius:50%;padding:1px}
 .pill{display:flex;align-items:center;gap:4px;background:var(--wood-edge);border-radius:999px;padding:3px 9px 3px 5px;font-weight:700;font-size:14px;font-variant-numeric:tabular-nums}
 .pill .ic{width:18px;height:18px;font-size:15px}
 .lvl{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
@@ -50,6 +51,10 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .orders{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .order{background:var(--cream);border:3px solid var(--wood-edge);border-radius:12px;padding:5px;display:flex;flex-direction:column;gap:3px;align-items:center;min-width:0}
 .order.story{background:#fff1c7;border-color:var(--gold-d)}
+.order.dishy{background:#ffe9e0;border-color:#e0703c}
+.dish{display:flex;align-items:center;gap:3px;max-width:100%;font-size:10px;font-weight:800;color:#b5471b;line-height:1.1}
+.dish .ic{flex:0 0 30px;width:30px;height:30px;font-size:22px}
+.dish>span:not(.ic){overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .tag{font-size:9px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--gold-d);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .who{display:flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--wood);max-width:100%}
 .who .ic{width:22px;height:22px;font-size:17px;border-radius:50%;overflow:hidden;background:var(--cell-2)}
@@ -76,10 +81,11 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .ghost .ic{width:100%;height:100%}
 .shelf{display:flex;gap:6px;overflow-x:auto;padding:2px 2px 4px;scrollbar-width:none}
 .shelf::-webkit-scrollbar{display:none}
-.gen{flex:1 0 64px;background:var(--cream);border:3px solid var(--wood);border-bottom-width:5px;border-radius:12px;padding:3px 2px;display:flex;flex-direction:column;align-items:center;gap:1px}
-.gen .ic{width:34px;height:34px;font-size:24px}
-.gen b{font-size:10px;font-weight:700;color:var(--wood);white-space:nowrap}
-.gen small{font-size:9px;color:var(--muted)}
+.gen{flex:1 0 46px;min-width:0;background:var(--cream);border:3px solid var(--wood);border-bottom-width:5px;border-radius:12px;padding:3px 2px;display:flex;flex-direction:column;align-items:center;gap:1px}
+.gen .ic{width:30px;height:30px;font-size:22px}
+.gen b{font-size:8.5px;letter-spacing:-.05em;font-weight:700;color:var(--wood);white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.gen small{font-size:8px;letter-spacing:-.03em;color:var(--muted);white-space:nowrap}
+.gen{padding-left:0;padding-right:0;border-left-width:2px;border-right-width:2px}
 .gen.lock{opacity:.45;border-style:dashed}
 .gen:active:not(.lock){transform:translateY(2px);border-bottom-width:3px}
 /* home */
@@ -120,6 +126,7 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .panel{flex:1;min-height:0;overflow:auto;background:var(--cream);border:4px solid var(--wood);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:10px}
 .panel h2{margin:0;font-size:20px;font-weight:800;color:var(--wood);text-wrap:balance}
 .panel p,.sheet p{margin:0;font-size:14px;line-height:1.45;color:var(--muted)}
+.row input[type=range]{width:100%;margin-top:6px;accent-color:var(--gold-d)}
 .row{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--cell-2);border-radius:12px;padding:9px}
 .row>.ic{width:40px;height:40px;font-size:28px;flex:0 0 auto}
 .row .tx{flex:1;min-width:0}
@@ -199,7 +206,7 @@ button.pill{border:0;font:inherit;color:inherit;cursor:pointer}
 .ebox .tx{flex:1;display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--wood);font-weight:700}
 .ebar{position:relative;height:20px;border-radius:999px;background:#d9cbb3;overflow:hidden}.ebar i{position:absolute;inset:0 auto 0 0;background:linear-gradient(#8fd35a,#5ea83a)}.ebar span{position:relative;display:block;text-align:center;font-weight:800;font-size:12px;line-height:20px;color:var(--ink)}
 .hc-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.hc-top h2{margin:0}
-.hstage{position:relative;display:grid;grid-template-columns:62px 1fr 62px;gap:6px;align-items:center;border-radius:16px;padding:8px;background:radial-gradient(ellipse at 50% 85%,rgba(255,255,255,.55) 0 22%,transparent 23%),linear-gradient(160deg,var(--rc,#8bc34a) 0%,#2b4a3f 100%);border:3px solid var(--wood)}
+.hstage{position:relative;display:grid;grid-template-columns:62px 1fr 62px;gap:6px;align-items:center;border-radius:16px;padding:8px;background:radial-gradient(ellipse 26% 5% at 50% 90%,rgba(0,0,0,.35),transparent 100%),linear-gradient(160deg,var(--rc,#8bc34a) 0%,#2b4a3f 100%);border:3px solid var(--wood)}
 .hstage .col{display:flex;flex-direction:column;gap:6px}
 .hstage .hfig{display:flex;justify-content:center;min-width:0}.hstage .hfig .ic{display:block;position:relative;width:min(100%,200px);height:auto;aspect-ratio:4/5;background:none;border:0;font-size:90px;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35))}.hstage .hfig .ic img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}.hstage .hfig .ic.nf>.fb{display:grid;place-items:center;height:100%}
 .gslot{width:62px;height:62px;border-radius:12px;background:rgba(255,255,255,.88);border:2px solid #fff;display:grid;place-items:center;position:relative;padding:0}
@@ -254,33 +261,58 @@ const CONFIG = {
 };
 
 /* ---------- содержимое ---------- */
+// линии продуктов (29.10): слияние двух одинаковых даёт «то же, но больше или лучше»; составные блюда — это фирменные заказы героев
+// каждый продукт: [эмодзи, название, картинка]
 const LINES = {
-  b:{n:'Выпечка', gen:'Мельница', ge:'🌾', it:[['🌾','Колос'],['🍞','Хлеб'],['🥐','Круассан'],['🥧','Пирог'],['🎂','Торт']]},
-  d:{n:'Молочка', gen:'Корова',   ge:'🐄', it:[['🥛','Молоко'],['🧈','Масло'],['🧀','Сыр'],['🍕','Пицца'],['🍰','Чизкейк']]},
-  g:{n:'Огород',  gen:'Грядка',   ge:'🌱', it:[['🌱','Росток'],['🥕','Морковь'],['🥗','Салат'],['🍲','Суп'],['🍱','Обед-бенто']]},
-  f:{n:'Рыба',    gen:'Удочка',   ge:'🎣', it:[['🐟','Рыбка'],['🍤','Креветки'],['🍣','Роллы'],['🍙','Онигири'],['🥘','Паэлья']], needHero:'cat'},
+  b:{n:'Выпечка', gen:'Мельница', ge:'🌾', it:[['🌾','Колосок','items/b0'],['🥐','Круассан','items/b2'],['🥖','Батон','items/b1'],['🥧','Пирог','items/b3'],['🎂','Праздничный ягодный пирог','food/pie_fest']]},
+  d:{n:'Молочка', gen:'Корова',   ge:'🐄', it:[['🥛','Молоко','items/d0'],['🍶','Сливки','food/cream'],['🧈','Масло','items/d1'],['🧀','Сыр','items/d2'],['🧀','Целая головка сыра','food/cheese_wheel']]},
+  g:{n:'Огород',  gen:'Грядка',   ge:'🌱', it:[['🌱','Росток','items/g0'],['🥕','Морковка','items/g1'],['🥬','Капуста','food/cabbage'],['🎃','Тыква','food/pumpkin'],['🧺','Корзина урожая','food/harvest']]},
+  f:{n:'Рыба',    gen:'Удочка',   ge:'🎣', it:[['🐟','Рыбка','items/f0'],['🍤','Креветки','items/f1'],['🦀','Краб','food/crab'],['🐟','Лосось','food/salmon'],['🐟','Тунец','food/tuna']], needHero:'cat'},
+  s:{n:'Сад',     gen:'Ягодник',  ge:'🫐', it:[['🫐','Черника','food/blueberry'],['🍓','Клубника','food/strawberry'],['🍌','Банан','food/banana'],['🥭','Манго','food/mango'],['🍉','Арбуз','food/watermelon']]},
+  m:{n:'Гриль',   gen:'Гриль',    ge:'🍖', it:[['🌭','Сосиска','food/sausage'],['🍔','Котлета','food/cutlet'],['🍗','Куриная ножка','food/drumstick'],['🍢','Шашлык','food/kebab'],['🥩','Огромный стейк','food/tomahawk']]},
 };
-const LINE_ORDER = ['b','d','g','f'];
+const LINE_ORDER = ['b','d','g','s','f','m'];
+const LINE_LEVEL = { f:4, s:3, m:6 };   // с какого уровня игрока открывается линия (удочка — раньше, если есть Кот)
+// фирменные блюда: заказ из 2–3 продуктов разных линий, на карточке — картинка блюда (assets/dish/<герой>.webp)
+const DISH = {
+  trainer:  {n:'Овсянка с ягодами',        e:'🥣', items:[['b',0],['s',1],['s',2]]},
+  lifter:   {n:'Банка протеина',           e:'🥤', items:[['d',0],['d',1],['s',2]]},
+  office:   {n:'Капучино с круассаном',    e:'☕', items:[['b',1],['d',1],['d',2]]},
+  cat:      {n:'Рыбка со сливками',        e:'🐟', items:[['f',0],['f',1],['d',1]]},
+  dog:      {n:'Косточка с мясом',         e:'🦴', items:[['m',3],['g',1]]},
+  hamster:  {n:'Семечки и орехи',          e:'🌰', items:[['g',3],['b',0]]},
+  chef:     {n:'Паста с сыром',            e:'🍝', items:[['b',0],['d',3]]},
+  grandma:  {n:'Пирожки с вареньем',       e:'🥟', items:[['b',3],['s',1]]},
+  yoga:     {n:'Смузи-боул',               e:'🥣', items:[['d',1],['s',3]]},
+  kid:      {n:'Мороженое',                e:'🍨', items:[['d',1],['s',1],['s',2]]},
+  student:  {n:'Лапша с курицей',          e:'🍜', items:[['b',0],['m',2],['g',1]]},
+  zoomer:   {n:'Бабл-ти',                  e:'🧋', items:[['d',0],['s',3]]},
+  muaythai: {n:'Рис с курицей',            e:'🍛', items:[['b',0],['m',2],['g',2]]},
+  strongman:{n:'Огромный стейк с овощами', e:'🥩', items:[['m',4],['g',2]]},
+  coachf:   {n:'Салат с курицей',          e:'🥗', items:[['m',2],['g',2]]},
+};
+const DISH_CHANCE = .3;   // доля заказов, где герой просит своё фирменное блюдо (если его линии уже открыты)
+const DISH_PAY = 1.5;     // фирменное блюдо платит в полтора раза больше обычного заказа из тех же продуктов
 const SP = { chest:['🎁','Сундук: тапни, чтобы открыть'], joker:['⭐','Звезда: брось на продукт — он станет лучше'], scis:['✂️','Ножницы: брось на продукт — он разделится на два'] };
 /* ---------- герои: 15 соседей в трёх клубах ---------- */
 const CLUBS = { sport:['💪','Спорт'], city:['🏙️','Город'], yard:['🌳','Двор'] };
 const STORY = (name, steps, coins, prize) => ({name, steps, coins, prize});
 const HEROES = {
-  trainer:  {n:'Тренер', e:'💪', club:'sport', rar:'starter', fav:['g','d'], line:'Каждый день — тренировка. И белок!', story:STORY('Тренер готовится к турниру',[[['g',2]],[['d',2],['g',2]],[['g',3]]],150,'chest')},
-  lifter:   {n:'Лифтёр', e:'🏋️', club:'sport', rar:'starter', fav:['b','d'], line:'Присед, жим, тяга — и плотный обед.', story:STORY('Лифтёр идёт на «Три попытки»',[[['b',2]],[['d',3]],[['b',3],['d',2]]],180,'joker')},
-  office:   {n:'Офисник', e:'💼', club:'city', rar:'starter', fav:['b','g'], line:'Кофе, отчёт, и скорей бы отпуск.', story:STORY('Квартальный отчёт',[[['b',1],['g',1]],[['g',3]],[['b',4]]],200,'chest')},
+  trainer:  {n:'Тренер', e:'💪', club:'sport', rar:'starter', fav:['g','d','s'], line:'Каждый день — тренировка. И белок!', story:STORY('Тренер готовится к турниру',[[['g',2]],[['d',2],['g',2]],[['g',3]]],150,'chest')},
+  lifter:   {n:'Лифтёр', e:'🏋️', club:'sport', rar:'starter', fav:['b','d','m'], line:'Присед, жим, тяга — и плотный обед.', story:STORY('Лифтёр идёт на «Три попытки»',[[['b',2]],[['d',3]],[['b',3],['d',2]]],180,'joker')},
+  office:   {n:'Офисник', e:'💼', club:'city', rar:'starter', fav:['b','g','d'], line:'Кофе, отчёт, и скорей бы отпуск.', story:STORY('Квартальный отчёт',[[['b',1],['g',1]],[['g',3]],[['b',4]]],200,'chest')},
   cat:      {n:'Кот', e:'🐱', club:'yard', rar:'starter', fav:['d','f'], line:'Молоко — хорошо. Рыба — лучше.', story:STORY('Кот идёт на выставку',[[['d',2]],[['f',2]],[['f',3]]],220,'joker')},
-  strongman:{n:'Стронгмен', e:'🦾', club:'sport', rar:'epic', fav:['b','d'], line:'Двойную порцию. Нет, тройную.', story:STORY('Турнир силачей',[[['b',3]],[['d',3],['b',2]],[['b',4]]],260,'chest')},
-  muaythai: {n:'Тайский боец', e:'🥊', club:'sport', rar:'epic', fav:['g','f'], line:'Лёгкий рис, свежая рыба — и в бой.', story:STORY('Бой на стадионе',[[['f',2]],[['g',3]],[['f',4]]],260,'joker')},
-  coachf:   {n:'Фитнес-тренер', e:'🏃‍♀️', club:'sport', rar:'rare', fav:['g','d'], line:'Марафон сам себя не пробежит!', story:STORY('Марафон',[[['g',2]],[['d',2]],[['g',4]]],220,'chest')},
-  student:  {n:'Студентка', e:'📚', club:'city', rar:'rare', fav:['b','g'], line:'Сессия скоро, а я голодная.', story:STORY('Сессия',[[['b',2]],[['g',2],['b',1]],[['b',3]]],200,'joker')},
-  zoomer:   {n:'Зумер', e:'🎧', club:'city', rar:'epic', fav:['d','f'], line:'Сфоткаю еду — и сразу в рек.', story:STORY('Вирусный ролик',[[['d',2]],[['f',3]],[['d',4]]],260,'chest')},
-  kid:      {n:'Ребёнок', e:'🧒', club:'city', rar:'epic', fav:['b','d'], line:'А пирог будет? А торт?', story:STORY('Олимпиада',[[['d',1],['b',1]],[['b',3]],[['b',4]]],240,'joker')},
-  chef:     {n:'Шеф', e:'👨‍🍳', club:'city', rar:'rare', fav:['b','d','g','f'], line:'На моей кухне всё по рецепту!', story:STORY('Праздничный банкет',[[['f',2],['g',2]],[['d',3]],[['b',4],['f',3]]],300,'chest')},
-  dog:      {n:'Пёс', e:'🐶', club:'yard', rar:'rare', fav:['d','b'], line:'Гав! То есть — спасибо за обед!', story:STORY('Аджилити',[[['d',2]],[['b',2]],[['d',3]]],200,'joker')},
+  strongman:{n:'Стронгмен', e:'🦾', club:'sport', rar:'epic', fav:['b','m'], line:'Двойную порцию. Нет, тройную.', story:STORY('Турнир силачей',[[['b',3]],[['d',3],['b',2]],[['b',4]]],260,'chest')},
+  muaythai: {n:'Тайский боец', e:'🥊', club:'sport', rar:'epic', fav:['g','m','f'], line:'Лёгкий рис, свежая рыба — и в бой.', story:STORY('Бой на стадионе',[[['f',2]],[['g',3]],[['f',4]]],260,'joker')},
+  coachf:   {n:'Фитнес-тренер', e:'🏃‍♀️', club:'sport', rar:'rare', fav:['g','m','s'], line:'Марафон сам себя не пробежит!', story:STORY('Марафон',[[['g',2]],[['d',2]],[['g',4]]],220,'chest')},
+  student:  {n:'Студентка', e:'📚', club:'city', rar:'rare', fav:['b','g','m'], line:'Сессия скоро, а я голодная.', story:STORY('Сессия',[[['b',2]],[['g',2],['b',1]],[['b',3]]],200,'joker')},
+  zoomer:   {n:'Зумер', e:'🎧', club:'city', rar:'epic', fav:['d','s'], line:'Сфоткаю еду — и сразу в рек.', story:STORY('Вирусный ролик',[[['d',2]],[['f',3]],[['d',4]]],260,'chest')},
+  kid:      {n:'Ребёнок', e:'🧒', club:'city', rar:'epic', fav:['b','d','s'], line:'А пирог будет? А торт?', story:STORY('Олимпиада',[[['d',1],['b',1]],[['b',3]],[['b',4]]],240,'joker')},
+  chef:     {n:'Шеф', e:'👨‍🍳', club:'city', rar:'rare', fav:['b','d','g','f','m'], line:'На моей кухне всё по рецепту!', story:STORY('Праздничный банкет',[[['f',2],['g',2]],[['d',3]],[['b',4],['f',3]]],300,'chest')},
+  dog:      {n:'Пёс', e:'🐶', club:'yard', rar:'rare', fav:['m','d'], line:'Гав! То есть — спасибо за обед!', story:STORY('Аджилити',[[['d',2]],[['b',2]],[['d',3]]],200,'joker')},
   hamster:  {n:'Хомяк', e:'🐹', club:'yard', rar:'rare', fav:['g','b'], line:'Семечки — за щёку, остальное — тоже.', story:STORY('Хомячьи бега',[[['g',1],['b',1]],[['g',3]],[['b',3]]],180,'chest')},
-  grandma:  {n:'Бабушка', e:'🧺', club:'yard', rar:'rare', fav:['b','g'], line:'Кушай, внучок, кушай!', story:STORY('Ярмарка урожая',[[['g',2]],[['b',3]],[['g',4]]],220,'joker')},
-  yoga:     {n:'Йог', e:'🧘', club:'yard', rar:'epic', fav:['g','f'], line:'Вдох — салат. Выдох — суп.', story:STORY('Ретрит',[[['g',2]],[['f',2]],[['g',3],['f',3]]],240,'chest')},
+  grandma:  {n:'Бабушка', e:'🧺', club:'yard', rar:'rare', fav:['b','g','s'], line:'Кушай, внучок, кушай!', story:STORY('Ярмарка урожая',[[['g',2]],[['b',3]],[['g',4]]],220,'joker')},
+  yoga:     {n:'Йог', e:'🧘', club:'yard', rar:'epic', fav:['g','s','f'], line:'Вдох — салат. Выдох — суп.', story:STORY('Ретрит',[[['g',2]],[['f',2]],[['g',3],['f',3]]],240,'chest')},
 };
 const HERO_IDS = Object.keys(HEROES);
 const STARTERS = ['trainer','lifter','office','cat'];
@@ -493,8 +525,94 @@ const pick = a => a[rnd(a.length)];
 const N = CONFIG.COLS*CONFIG.ROWS;
 let offset = 0; const now = () => Date.now()+offset;
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* ---------- звук: мягкие звуки нажатий (синтез, без файлов) и музыка по зонам ---------- */
+// музыка: assets/music/<зона>.mp3, грузится только когда зона понадобилась, игра от неё не ждёт
+const MUSIC = { street:'street', home:'home', kitchen:'kitchen', menu:'menu' };
+const MUSIC_ON = false;   // 29.10: подобранные треки Илье не понравились — пока только звуки; включить, когда положим файлы в assets/music/
+const Sound = (() => {
+  let ctx = null, master = null, sfxBus = null, musicBus = null, unlocked = false, zone = null, cur = null;
+  const tracks = {};
+  const prefs = (() => { try{ return Object.assign({music:true, sfx:true, mv:.45, sv:.6}, JSON.parse(localStorage.getItem('ys_audio')||'{}')); }catch(e){ return {music:true, sfx:true, mv:.45, sv:.6}; } })();
+  const save = () => { try{ localStorage.setItem('ys_audio', JSON.stringify(prefs)); }catch(e){} };
+  function init(){
+    if(ctx) return true;
+    try{ ctx = new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return false; }
+    master = ctx.createGain(); master.connect(ctx.destination);
+    // общий мягкий фильтр: срезаем верха, чтобы ничего не «пищало»
+    const soft = ctx.createBiquadFilter(); soft.type = 'lowpass'; soft.frequency.value = 3200; soft.connect(master);
+    sfxBus = ctx.createGain(); sfxBus.gain.value = prefs.sfx ? prefs.sv : 0; sfxBus.connect(soft);
+    musicBus = ctx.createGain(); musicBus.gain.value = prefs.music ? prefs.mv : 0; musicBus.connect(master);
+    return true;
+  }
+  // один мягкий тон: синус/треугольник, плавная атака и затухание
+  function tone(freq, t0, dur, vol, type){
+    if(!ctx || !prefs.sfx) return;
+    const o = ctx.createOscillator(), g = ctx.createGain(), t = ctx.currentTime + (t0||0);
+    o.type = type||'sine'; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol||.18, t + .012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + (dur||.18));
+    o.connect(g); g.connect(sfxBus); o.start(t); o.stop(t + (dur||.18) + .05);
+  }
+  const NOTE = [523.25, 587.33, 659.25, 783.99, 880, 1046.5, 1174.66];   // пентатоника до-мажор: всё звучит дружно
+  const fx = {
+    tap(){ tone(660, 0, .07, .06, 'sine'); },
+    pop(){ tone(440, 0, .09, .12, 'triangle'); tone(660, .03, .1, .08, 'sine'); },
+    merge(l){ const n = Math.min(NOTE.length-2, l||0); tone(NOTE[n], 0, .16, .16, 'triangle'); tone(NOTE[n+2] || NOTE[n]*1.5, .07, .22, .12, 'sine'); },
+    coins(){ [1046.5, 1318.5, 1568].forEach((f,i) => tone(f, i*.07, .22, .09, 'sine')); },
+    level(){ [523.25, 659.25, 783.99, 1046.5].forEach((f,i) => tone(f, i*.11, .35, .13, 'triangle')); },
+    built(){ [659.25, 880, 1046.5].forEach((f,i) => tone(f, i*.12, .4, .11, 'sine')); },
+    chest(){ [784, 988, 1175, 1568].forEach((f,i) => tone(f, i*.05, .25, .07, 'sine')); },
+    buy(){ tone(784, 0, .12, .1, 'triangle'); tone(1175, .08, .25, .1, 'sine'); },
+    nope(){ tone(330, 0, .14, .1, 'triangle'); tone(262, .1, .2, .08, 'triangle'); },
+  };
+  function track(z){
+    if(tracks[z]) return tracks[z];
+    const a = new Audio(); a.src = 'assets/music/' + MUSIC[z] + '.mp3'; a.loop = true; a.preload = 'auto'; a.crossOrigin = 'anonymous';
+    const g = ctx.createGain(); g.gain.value = 0; g.connect(musicBus);
+    try{ ctx.createMediaElementSource(a).connect(g); }catch(e){}
+    a.addEventListener('error', () => { a.dataset.bad = '1'; });
+    return tracks[z] = {a, g};
+  }
+  function fade(t, to, sec){ const now = ctx.currentTime; t.g.gain.cancelScheduledValues(now); t.g.gain.setValueAtTime(t.g.gain.value, now); t.g.gain.linearRampToValueAtTime(to, now + sec); }
+  function playZone(){
+    if(!MUSIC_ON || !unlocked || !ctx || !zone || !prefs.music || document.hidden) return;
+    const t = track(zone);
+    if(cur && cur !== t){ const old = cur; fade(old, 0, 1.2); setTimeout(() => { if(cur !== old) old.a.pause(); }, 1300); }
+    cur = t; if(t.a.dataset.bad) return;
+    const p = t.a.play(); if(p && p.catch) p.catch(() => {});
+    fade(t, 1, 1.2);
+  }
+  function unlock(){
+    if(unlocked) return; if(!init()) return; unlocked = true;
+    if(ctx.state === 'suspended') ctx.resume();
+    playZone();
+  }
+  document.addEventListener('pointerdown', unlock, {capture:true, passive:true});
+  document.addEventListener('visibilitychange', () => {
+    if(!ctx) return;
+    if(document.hidden){ Object.values(tracks).forEach(t => t.a.pause()); ctx.suspend && ctx.suspend(); }
+    else { ctx.resume && ctx.resume(); playZone(); }
+  });
+  return {
+    play(name, arg){ if(!unlocked || !prefs.sfx) return; try{ fx[name] && fx[name](arg); }catch(e){} },
+    zone(z){ if(z === zone) return; zone = z; playZone(); },
+    prefs,
+    set(k, v){ prefs[k] = v; save(); if(!ctx) return;
+      if(k==='music' || k==='mv'){ musicBus.gain.value = prefs.music ? prefs.mv : 0; if(prefs.music) playZone(); else Object.values(tracks).forEach(t => t.a.pause()); }
+      if(k==='sfx' || k==='sv') sfxBus.gain.value = prefs.sfx ? prefs.sv : 0; },
+  };
+})();
+const zoneOf = () => view==='kitchen' ? 'kitchen' : view==='home' ? (curPlace==='home' ? 'home' : 'street') : 'menu';
+function soundSheet(){
+  const P = Sound.prefs;
+  const row = (k, vk, icon, name, note) => `<div class="row"><span class="ic">${icon}</span><div class="tx"><b>${name}</b><span>${note}</span>
+      <input type="range" min="0" max="100" value="${Math.round(P[vk]*100)}" data-vol="${vk}" aria-label="Громкость: ${name}" ${P[k]?'':'disabled'}></div>
+      <button class="mini${P[k]?'':' soft'}" data-snd="${k}">${P[k]?'Вкл':'Выкл'}</button></div>`;
+  return `<h2>Звук</h2>${MUSIC_ON ? row('music','mv','🎵','Музыка','Своя мелодия во дворе, дома, на кухне и в меню') : ''}${row('sfx','sv','🔔','Звуки','Нажатия, соединения, монеты, новый уровень')}
+    <p style="font-size:12px">Настройка запоминается на этом телефоне.</p>`;
+}
 function ic(path, emoji, cls){ return `<span class="ic ${cls||''}"><img src="assets/${path}.webp" alt="" onerror="this.parentNode.classList.add('nf')"><span class="fb">${emoji}</span></span>`; }
-const itemIc = (c,l) => ic(`items/${c}${l}`, LINES[c].it[l][0]);
+const itemIc = (c,l) => ic(LINES[c].it[l][2], LINES[c].it[l][0]);
 const spIc = k => ic(`sp/${k}`, SP[k][0]);
 const lookFace = (h,id) => ic(`heroes/looks/${id}_face`, HEROES[h].e);
 const lookBody = (h,id) => ic(`heroes/looks/${id}`, HEROES[h].e);
@@ -592,7 +710,7 @@ const TIPS = {
   kitchen: [
     ['#orders', 'Заказы соседей', 'Каждый герой просит своё блюдо. Собери нужные продукты — и нажми «Отдать». За заказ: монеты, опыт и уровень героя.'],
     ['#bw', 'Кухня', 'Перетаскивай одинаковые продукты друг на друга — получится продукт уровнем выше. Так собираются блюда для заказов.'],
-    ['#shelf', 'Генераторы', 'Нажми на генератор — он даст продукт. Каждое нажатие тратит энергию ⚡: обычно 1, удочка 2, корзина Шефа 5.'],
+    ['#shelf', 'Генераторы', 'Нажми на генератор — он даст продукт. Каждое нажатие тратит энергию ⚡: обычно 1, удочка 2, корзина Шефа 5. Новые генераторы — Ягодник и Гриль — открываются с уровнем.'],
     ['[data-energy]', 'Энергия', 'Восстанавливается сама: +1 каждые 5 минут. Нажми сюда — тут бесплатная энергия 2 раза в день и банки.'],
     ['.lvl', 'Твой уровень', 'Растёт от заказов. С уровнями открываются новые места на улице, герои и команды.'],
     ['.nav [data-v="goals"]', 'Задания', 'Миссии дня и недели: выполняй — получай жетоны, банки и сундуки. Красная точка — есть что забрать.'],
@@ -726,7 +844,7 @@ function tryShardHeroes(){
 }
 function randomShardHero(){ const pool = HERO_IDS.filter(h => ownsHero(h) ? heroStars(h) < 5 : !STARTERS.includes(h)); return pool.length ? pick(pool) : null; }
 const shardNeed = h => ownsHero(h) ? STAR_COST[Math.min(4, heroStars(h))] : SHARDS_NEED;
-function lineOpen(c){ return c!=='f' || S.level >= 4 || ownedHeroes().some(h => HEROES[h].fav.includes('f') && HEROES[h].fav.length<=2); }
+function lineOpen(c){ if(!LINE_LEVEL[c] || S.level >= LINE_LEVEL[c]) return true; return c==='f' && ownedHeroes().some(h => HEROES[h].fav.includes('f') && HEROES[h].fav.length<=2); }
 function tickEnergy(){
   if(S.energy >= CONFIG.ENERGY_MAX){ S.eTs = now(); return; }
   const ms = regenMs(), g = Math.floor((now()-S.eTs)/ms);
@@ -737,7 +855,7 @@ function addXp(n){
   S.xp += n;
   while(S.xp >= xpNeed(S.level)){
     const le = CONFIG.LEVEL_ENERGY + Math.floor(skill('levelE'));
-    S.xp -= xpNeed(S.level); S.level++; S.energy += le; haptic('ok');
+    S.xp -= xpNeed(S.level); S.level++; S.energy += le; haptic('ok'); setTimeout(() => Sound.play('level'), 350);
     let msg = '🎉 Уровень '+S.level+'! +'+le+' ⚡';
     if(S.level===4) msg += '\nОткрыта удочка 🎣';
     TEAM_OPEN.forEach((t,i) => { if(i && S.level===t.lvl) msg += '\nОткрыта команда '+(i+1)+'!'; });
@@ -754,8 +872,12 @@ function orderHero(){
   if(!others.length || (team.length && Math.random() < .5)) return team.length ? pick(team) : null;
   return pick(others);
 }
+const dishOpen = h => DISH[h] && DISH[h].items.every(([c]) => lineOpen(c));
+function mkDish(hi){ const d = DISH[hi], items = d.items.map(([c,l]) => ({c, l}));
+  return { hero:hi, dish:true, items, reward: Math.round(items.reduce((a,x)=>a+5*Math.pow(2,x.l),0) * DISH_PAY) }; }
 function mkOrder(force){
   const hi = force && HEROES[force] ? force : orderHero(); if(!hi) return null; const h = HEROES[hi];
+  if(!force && dishOpen(hi) && Math.random() < DISH_CHANCE && !S.orders.some(o => o && o.dish && o.hero===hi)) return mkDish(hi);
   const favs = h.fav.filter(lineOpen);
   const maxL = Math.min(4, 1+Math.floor((S.level+1)/2));
   const cnt = S.level>=3 && Math.random()<.45 ? 2 : 1;
@@ -795,8 +917,8 @@ function give(k){
       const sh = randomShardHero(); if(sh) addShard(sh, 2);
       toast('🏆 '+s.name+' — готово!\n+'+sc+' 🪙 и '+SP[s.prize][0]+' в подарок'+(sh?'\n+2 осколка: '+HEROES[sh].e+' '+hn(sh):''), 4200); S.orders[k] = mkStory(); }
     else { toast(h.e+' '+hn(o.hero)+': отлично! Шаг '+st.step+' из '+s.steps.length); S.orders[k] = mkStory(); }
-  } else { toast(h.e+' '+hn(o.hero)+': спасибо! +'+pay+' 🪙'); S.orders[k] = mkOrder(); }
-  haptic('ok'); tutStep(2); markDirty(); render();
+  } else { toast(o.dish ? (DISH[o.hero].e+' '+hn(o.hero)+': моё любимое — '+DISH[o.hero].n.toLowerCase()+'!\n+'+pay+' 🪙') : (h.e+' '+hn(o.hero)+': спасибо! +'+pay+' 🪙'), o.dish?3000:2400); S.orders[k] = mkOrder(); }
+  haptic('ok'); Sound.play('coins'); tutStep(2); markDirty(); render();
 }
 
 /* ---------- поле ---------- */
@@ -816,10 +938,10 @@ function basket(){
   haptic('medium'); toast('🧺 Корзина Шефа: 3 продукта!'); markDirty(); renderKitchen();
 }
 function spawnFrom(c){
-  if(!lineOpen(c)){ toast('Удочка откроется на 4-м уровне'); return; }
+  if(!lineOpen(c)){ toast(LINES[c].gen+' откроется на '+LINE_LEVEL[c]+'-м уровне'); return; }
   tickEnergy();
   const cost = energyCost(c);
-  if(S.energy < cost){ openSheet('energy'); return; }
+  if(S.energy < cost){ Sound.play('nope'); openSheet('energy'); return; }
   if(!empties().length){ toast('Нет места — соедини одинаковые продукты'); return; }
   if(S.energy >= CONFIG.ENERGY_MAX) S.eTs = now();
   if(Math.random() >= skill('refund')) S.energy -= cost; mc('gens');
@@ -827,7 +949,7 @@ function spawnFrom(c){
   if(r < ch) obj = {sp:'chest'}; else if(r < ch+sp.joker) obj = {sp:'joker'}; else if(r < ch+sp.joker+sp.scis) obj = {sp:'scis'};
   else { const odds = CONFIG.GEN_ODDS[(S.gen[c]||1)-1], x = Math.random()*100; obj = {c, l: x<odds[0]?0 : x<odds[0]+odds[1]?1:2};
     if(obj.l < 4 && Math.random() < skill('upspawn')) obj.l++; }
-  const i = place(obj); popAt.add(i); haptic('light');
+  const i = place(obj); popAt.add(i); haptic('light'); Sound.play('pop');
   if(obj.sp) toast(SP[obj.sp][0]+' '+SP[obj.sp][1]);
   tutStep(0); markDirty(); renderKitchen();
 }
@@ -835,7 +957,7 @@ function openChest(i){
   S.board[i] = null; mc('chests');
   const pool = LINE_ORDER.filter(lineOpen); const n = 2+rnd(2); const got = [];
   for(let k=0;k<n;k++){ const obj = {c:pick(pool), l:rnd(2)}; const j = place(obj); if(j>=0){ popAt.add(j); got.push(LINES[obj.c].it[obj.l][0]); } }
-  const coins = 10+rnd(21); S.coins += coins; haptic('ok');
+  const coins = 10+rnd(21); S.coins += coins; haptic('ok'); Sound.play('chest');
   let extra = ''; if(Math.random() < CONFIG.SHARD_CHANCE + skill('shard')){ const sh = randomShardHero(); if(sh){ addShard(sh, 1); extra = '\n+1 осколок: '+HEROES[sh].e+' '+hn(sh)+' ('+((S.shards[sh]||0)||'герой!')+(S.shards[sh]?'/'+shardNeed(sh):'')+')'; } }
   toast('🎁 В сундуке: '+got.join(' ')+' и '+coins+' 🪙'+extra, extra?3600:2400); markDirty();
 }
@@ -846,7 +968,7 @@ function drop(from, to){
   if(a.sp==='scis' && b && !b.sp){ if(b.l<1){ toast('Нужен продукт уровня 2 и выше'); return; } S.board[to]={c:b.c,l:b.l-1}; S.board[from]={c:b.c,l:b.l-1}; popAt.add(to); popAt.add(from); markDirty(); return; }
   if(b && !a.sp && !b.sp && b.c===a.c && b.l===a.l){
     if(a.l>=4){ toast('Это уже лучшее блюдо!'); return; }
-    S.board[to]={c:a.c,l:a.l+1}; S.board[from]=null; popAt.add(to); addXp(a.l+1); S.stats.merges++; mc('merges'); haptic('medium');
+    S.board[to]={c:a.c,l:a.l+1}; S.board[from]=null; popAt.add(to); addXp(a.l+1); S.stats.merges++; mc('merges'); haptic('medium'); Sound.play('merge', a.l+1);
     if(a.l+1===4) toast('✨ Новое блюдо: '+LINES[a.c].it[4][1]+'!');
     tutStep(1);
   } else { S.board[to]=a; S.board[from]=b; }
@@ -866,7 +988,7 @@ function hud(){
   const left = S.energy<CONFIG.ENERGY_MAX ? fmtTime((regenMs()-(now()-S.eTs)%regenMs())/1000) : '';
   return `${DEMO?'<div class="demo">Демо-режим: прогресс хранится только в этом браузере. Открой игру в Telegram.</div>':''}
   <div class="hud">
-    <div class="ava">${avaIc(S.owner.avatar)}</div>
+    <button class="ava" data-sound aria-label="Звук и музыка">${avaIc(S.owner.avatar)}</button>
     <div class="pill" aria-label="Монеты">${ic('sp/coin','🪙')}<span id="coins">${S.coins}</span></div>
     <div class="lvl"><b>Уровень ${S.level} · ${S.xp}/${xpNeed(S.level)}</b><div class="bar"><i style="width:${S.xp/xpNeed(S.level)*100}%"></i></div></div>
     <button class="pill energy" aria-label="Энергия" data-energy><span class="ic">⚡</span><span id="en">${S.energy}</span><small id="enT">${left}</small>${S.jars?`<i class="jarb">🥫${S.jars}</i>`:''}</button>
@@ -892,6 +1014,7 @@ function render(){
   app.innerHTML = hud() + `<div class="screen" id="screen" data-v="${view+(curPlace||'')}">${body}</div>` + navHtml();
   if(keep){ const np = $('screen').querySelector('.panel'); if(np) np.scrollTop = keep; else $('screen').scrollTop = keep; }
   if(view==='kitchen') mountKitchen();
+  Sound.zone(zoneOf());
   setTimeout(maybeTips, 350);
 }
 
@@ -921,8 +1044,9 @@ function renderKitchen(){
     const h = HEROES[o.hero], m = matchIdx(o), ok = m.every(i=>i>=0);
     let tag = '';
     if(o.story){ const s = h.story, st = S.story[o.hero]||{step:0}; tag = `<div class="tag" title="${esc(s.name)}">Сюжет ${st.step+1}/${s.steps.length}</div>`; }
+    if(o.dish && DISH[o.hero]){ const d = DISH[o.hero]; tag = `<div class="dish">${ic('dish/'+o.hero, d.e)}<span>${esc(d.n)}</span></div>`; }
     const need = o.items.map((x,j)=>`<div class="${m[j]>=0?'have':''}" title="${esc(LINES[x.c].it[x.l][1])}">${itemIc(x.c,x.l)}</div>`).join('');
-    return `<div class="order${o.story?' story':''}">${tag}<div class="who">${heroFace(o.hero)}<span>${h.n}</span></div><div class="need">${need}</div><button class="give" ${ok?'':'disabled'} data-k="${k}">Отдать · ${o.reward} ${CI}</button></div>`;
+    return `<div class="order${o.story?' story':''}${o.dish?' dishy':''}">${tag}<div class="who">${heroFace(o.hero)}<span>${h.n}</span></div><div class="need">${need}</div><button class="give" ${ok?'':'disabled'} data-k="${k}">Отдать · ${o.reward} ${CI}</button></div>`;
   }).join('');
   const hint = new Set(), s = selected!=null ? S.board[selected] : null;
   if(s) S.board.forEach((b,i)=>{ if(i===selected||!b) return;
@@ -938,8 +1062,8 @@ function renderKitchen(){
   });
   popAt.clear();
   $('shelf').innerHTML = LINE_ORDER.map(c => { const L = LINES[c], u = lineOpen(c), gl = S.gen[c]||1;
-    return `<button class="gen${u?'':' lock'}" data-c="${c}" aria-label="${L.gen}">${u?ic('gen/'+c, L.ge):'<span class="ic">🔒</span>'}<b>${L.gen}</b><small>${u?('ур. '+gl+' · '+energyCost(c)+'⚡'):'с Котом'}</small></button>`; }).join('')
-    + `<button class="gen basket" data-basket aria-label="Корзина Шефа">${ic('sp/chest','🧺')}<b>Корзина</b><small>3 продукта · 5⚡</small></button>`;
+    return `<button class="gen${u?'':' lock'}" data-c="${c}" aria-label="${L.gen}">${u?ic('gen/'+c, L.ge):'<span class="ic">🔒</span>'}<b>${L.gen}</b><small>${u?('ур. '+gl+' · '+energyCost(c)+'⚡'):(c==='f'?'4 ур. / Кот':LINE_LEVEL[c]+' ур.')}</small></button>`; }).join('')
+    + `<button class="gen basket" data-basket aria-label="Корзина Шефа">${ic('sp/chest','🧺')}<b>Корзина</b><small>3 шт · 5⚡</small></button>`;
 }
 let drag = null;
 function bindBoard(){
@@ -1012,7 +1136,7 @@ function roomHtml(){
 let justBuilt = null;
 function tickBuilds(){
   for(const r of REPAIRS){ const u = S.upg[r.id];
-    if(u && u.state==='build' && now() >= u.end){ u.state='done'; delete u.start; delete u.end; justBuilt = r.id; haptic('ok'); mc('built');
+    if(u && u.state==='build' && now() >= u.end){ u.state='done'; delete u.start; delete u.end; justBuilt = r.id; haptic('ok'); Sound.play('built'); mc('built');
       const pl = PLACES.find(x=>x.id===r.p);
       if(placeDone(r.p)){ const j = place({sp:'chest'}); toast('🎉 '+pl.n+' — полностью отделано!\n+'+Math.round(PLACE_BONUS*100)+'% монет за заказы навсегда, сундук на кухне и 5 банок энергии', 5000); }
       else toast('🔨 Готово: '+r.n+'!\nСтало уютнее'); markDirty(); if(view==='home') render(); if(kind==='repair'||kind==='busy') redraw(); }
@@ -1120,7 +1244,7 @@ function heroSheet(h){
     const favs = d.fav.map(c => `<span class="chip">${LINES[c].it[2][0]} ${LINES[c].n}</span>`).join('');
     const sets = (GEAR_SETS[h]||[]).map(([n,list,stage]) => { const have = list.filter(x=>((S.gear[h])||[]).includes(x)).length;
       return `<div class="row"><span class="ic" style="width:40px;height:40px">${lookFace(h,setImg(curHair(h),stage))}</span><div class="tx"><b>Комплект «${esc(n)}»</b><span>${have}/${list.length} — новый вид героя и +${Math.round(SET_BONUS*100)}% монет</span></div></div>`; }).join('');
-    body = starRow + `<div class="row"><span class="ic">🏆</span><div class="tx"><b>${esc(s.name)}</b><span>${st&&st.done?'Пройдено!':'Шаг '+((st&&st.step)||0)+' из '+s.steps.length+' — заказы в золотой рамке'}</span></div></div>` + sets + `<p>«${esc(d.line)}»</p><div><b class="sub">Любит готовить:</b>${favs}</div>`;
+    body = starRow + `<div class="row"><span class="ic">🏆</span><div class="tx"><b>${esc(s.name)}</b><span>${st&&st.done?'Пройдено!':'Шаг '+((st&&st.step)||0)+' из '+s.steps.length+' — заказы в золотой рамке'}</span></div></div>` + sets + `<p>«${esc(d.line)}»</p><div><b class="sub">Любит готовить:</b>${favs}</div>` + (DISH[h] ? `<div class="row">${ic('dish/'+h, DISH[h].e)}<div class="tx"><b>Фирменное блюдо: ${esc(DISH[h].n)}</b><span>${DISH[h].items.map(([c,l]) => LINES[c].it[l][1]).join(' + ')}${dishOpen(h)?'':' · откроется позже'} — платит в полтора раза больше</span></div></div>` : '');
   } else body = looksHtml(h) || '<p>Новые образы для этого героя скоро появятся.</p>';
   return top + stage + nameRow + lvl + teamRow + skillRow + gearInfo + tabs + body + `<button class="close" data-x>Закрыть</button>`;
 }
@@ -1270,6 +1394,7 @@ function drawSheet(){
       <div class="row"><span class="ic">🎁</span><div class="tx"><b>Подарок старожилу</b><span>200 монет, 2 сундука и значок «Первый сосед»</span></div></div>
       <button class="close" data-x>Спасибо!</button>`; }
   else if(kind==='gen'){ sh.innerHTML = genSheet(); }
+  else if(kind==='sound'){ sh.innerHTML = soundSheet(); }
 }
 function genSheet(){
   return `<h2>Генераторы</h2><p>Улучшенный генератор чаще даёт продукты повыше уровнем.</p>` +
@@ -1306,6 +1431,7 @@ async function buy(sku){
   if(!r.link){ toast(r.error==='unavailable' ? 'Этот товар сейчас недоступен' : 'Не получилось открыть оплату. Попробуй через минуту'); return; }
   TG.openInvoice(r.link, async st => {
     if(st!=='paid'){ toast(st==='cancelled' ? 'Покупка отменена' : 'Оплата не прошла'); return; }
+    Sound.play('buy');
     toast('Оплачено! Секунду…');
     for(const wait of [1200, 2500, 5000]){
       await new Promise(res => setTimeout(res, wait));
@@ -1345,7 +1471,7 @@ document.addEventListener('click', e => {
   if(ds.gear){ const [h,id] = ds.gear.split(':'); const it = GEAR[h].find(x=>x[0]===id); if(!it) return;
     if(it[3]==='s'){ buy('gear:'+h+':'+id); return; }
     if(S.coins < it[2]){ openSheet('need', {coins:it[2], back:'hero', arg:h}); return; }
-    S.coins -= it[2]; S.gear[h] = [...new Set([...(S.gear[h]||[]), id])]; haptic('ok');
+    S.coins -= it[2]; S.gear[h] = [...new Set([...(S.gear[h]||[]), id])]; haptic('ok'); Sound.play('buy');
     const st = setStage(h); toast(it[1]+' — твоё! +'+Math.round(it[4]*100)+'% монет'+(st && st[1].includes(id)?'\n🎉 Комплект «'+st[0]+'» собран — новый вид героя!':''), 3200);
     markDirty(); redraw(); return; }
   if(ds.jar){ const n = Math.min(Number(ds.jar)||0, S.jars||0); if(n>0){ tickEnergy(); S.jars -= n; S.energy += n*CONFIG.JAR_ENERGY; haptic('ok'); toast('🥫 +'+(n*CONFIG.JAR_ENERGY)+' ⚡'); markDirty(); redraw(); render(); } return; }
@@ -1374,13 +1500,13 @@ document.addEventListener('click', e => {
     if(k==='chest' && !empties().length){ toast('Нет места на кухне — освободи клетку для сундука'); return; }
     let msg = '';
     if(k==='shard'){ const h = randomShardHero(); if(!h){ toast('Все герои уже собраны'); return; } addShard(h, 1); msg = '🧩 Осколок: '+HEROES[h].e+' '+hn(h); }
-    S.coins -= it.coins; S.dshop[k]--; mc('shop');
+    S.coins -= it.coins; S.dshop[k]--; mc('shop'); Sound.play('buy');
     if(k==='jar'){ S.jars = (S.jars||0) + 1; msg = '🥫 +1 банка энергии'; }
     if(k==='chest'){ place({sp:'chest'}); msg = '🎁 Сундук на кухне!'; }
     haptic('ok'); toast(msg); markDirty(); save(); render(); return; }
   if(ds.wbuy){ const h = ds.wbuy; if(!S.wshop || !(S.wshop.left[h] > 0)) return;
     if(S.coins < WSHOP.coins){ openSheet('need', {coins:WSHOP.coins}); return; }
-    S.coins -= WSHOP.coins; S.wshop.left[h]--; mc('shop'); addShard(h, 1); haptic('ok'); toast('🧩 Осколок: '+HEROES[h].e+' '+hn(h)); markDirty(); save(); render(); return; }
+    S.coins -= WSHOP.coins; S.wshop.left[h]--; mc('shop'); Sound.play('buy'); addShard(h, 1); haptic('ok'); toast('🧩 Осколок: '+HEROES[h].e+' '+hn(h)); markDirty(); save(); render(); return; }
   if(ds.hair){ const [h,id] = ds.hair.split(':'); if(ownsLook(h,id)){ S.heroes[h].hair = id; S.heroes[h].look = 'auto'; markDirty(); redraw(); haptic('light'); } return; }
   if(ds.wear){ const [h,id] = ds.wear.split(':'); if(id==='auto' || ownsLook(h,id)){ S.heroes[h].look = id; markDirty(); redraw(); haptic('light'); } return; }
   if(ds.buy){ buy(ds.buy); return; }
@@ -1389,7 +1515,7 @@ document.addEventListener('click', e => {
     const busyN = REPAIRS.filter(x => S.upg[x.id] && S.upg[x.id].state==='build' && now() < S.upg[x.id].end).length;
     if(busyN >= builders()){ openSheet('busy'); return; }
     if(S.coins<r.c){ openSheet('need', {coins:r.c, back:'repair'}); return; }
-    S.coins -= r.c; S.upg[r.id] = {state:'build', start:now(), end:now()+Math.round(r.t*1000*(1-Math.min(.5, skill('build'))))}; mc('build'); toast('🔨 Стройка началась: '+r.n); markDirty(); save(); redraw(); render(); return; }
+    S.coins -= r.c; S.upg[r.id] = {state:'build', start:now(), end:now()+Math.round(r.t*1000*(1-Math.min(.5, skill('build'))))}; mc('build'); Sound.play('buy'); toast('🔨 Стройка началась: '+r.n); markDirty(); save(); redraw(); render(); return; }
   if(ds.finish){ tickBuilds(); redraw(); render(); return; }
   if(ds.gen){ const c = ds.gen, gl = S.gen[c]||1; if(gl<3 && S.coins<CONFIG.GEN_COST[gl]){ openSheet('need', {coins:CONFIG.GEN_COST[gl], back:'gen'}); return; } if(gl<3 && S.coins>=CONFIG.GEN_COST[gl]){ S.coins -= CONFIG.GEN_COST[gl]; S.gen[c] = gl+1; toast(LINES[c].gen+' улучшен до ур. '+(gl+1)); markDirty(); if(kind) redraw(); render(); } return; }
   if(ds.gp){ const a = goalPick||[]; const i = a.indexOf(ds.gp); if(i>=0) a.splice(i,1); else if(a.length<3) a.push(ds.gp); goalPick = a; render(); return; }
@@ -1404,6 +1530,12 @@ document.addEventListener('contextmenu', e => { if(e.target.closest('.gen')){ e.
 let lp = null, lpFired = false; document.addEventListener('pointerdown', e => { const g = e.target.closest('.gen'); if(!g) return; lpFired = false; lp = setTimeout(()=>{ lpFired = true; openSheet('gen'); }, 550); });
 document.addEventListener('pointerup', () => { clearTimeout(lp); lp = null; });
 document.addEventListener('click', e => { if(S && e.target.closest('[data-energy]')) openSheet('energy'); });
+document.addEventListener('click', e => {
+  if(e.target.closest('button')) Sound.play('tap');
+  if(e.target.closest('[data-sound]')){ openSheet('sound'); return; }
+  const t = e.target.closest('[data-snd]'); if(t){ Sound.set(t.dataset.snd, !Sound.prefs[t.dataset.snd]); redraw(); }
+});
+document.addEventListener('input', e => { const v = e.target.closest('[data-vol]'); if(v) Sound.set(v.dataset.vol, v.value/100); });
 document.addEventListener('pointercancel', () => { clearTimeout(lp); lp = null; });
 
 /* =====================================================================
