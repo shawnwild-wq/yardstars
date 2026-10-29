@@ -307,5 +307,21 @@ await page.waitForTimeout(3200);
 const srv3 = JSON.parse(env.DB.db.prepare('SELECT state FROM players WHERE uid=1001').get().state);
 if (srv3.freeLeft !== 1 || srv3.dshop.jar !== 2) errors.push('server free/shop ' + JSON.stringify({ f: srv3.freeLeft, d: srv3.dshop })); else console.log('server accepted free claim and daily purchase');
 
+// orders come from all characters, not only from the team; an order from a hero the player does not have can be given
+const ord = await page.evaluate(() => {
+  const team = teamHeroes(), seen = new Set(); let fromTeam = 0;
+  for (let i = 0; i < 300; i++) { const o = mkOrder(); seen.add(o.hero); if (team.includes(o.hero)) fromTeam++; }
+  const stranger = HERO_IDS.find((h) => !S.heroes[h]);
+  S.orders[1] = mkOrder(stranger); const o = S.orders[1]; S.board = S.board.map(() => null); o.items.forEach((x) => place({ c: x.c, l: x.l }));
+  const c0 = S.coins; give(1);
+  return { kinds: seen.size, fromTeam, stranger, paid: S.coins - c0, ownsAfter: !!S.heroes[stranger] };
+});
+if (ord.kinds < 6 || ord.fromTeam < 90 || ord.fromTeam > 210 || ord.paid <= 0 || ord.ownsAfter) errors.push('orders from all ' + JSON.stringify(ord)); else console.log('orders from all characters', JSON.stringify(ord));
+
+// pictures: no cut furniture, no bits of neighbouring pictures (tools/check_assets.py)
+{ const { spawnSync } = await import('node:child_process');
+  const r = spawnSync('python3', ['-I', new URL('../../tools/check_assets.py', import.meta.url).pathname], { encoding: 'utf8' });
+  if (r.error) console.log('image check skipped: no python3'); else if (r.status !== 0) errors.push('images:\n' + r.stdout); else console.log(r.stdout.trim()); }
+
 console.log(errors.length ? '\nERRORS:\n' + errors.join('\n') : '\nno errors');
 await browser.close();

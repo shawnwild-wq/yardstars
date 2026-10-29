@@ -99,6 +99,16 @@ SHEETS = {
     'bg_cafe':   dict(bg='place/cafe'),
     'bg_park':   dict(bg='place/park'),
     'bg_market': dict(bg='place/market'),
+    # 29.10: new merge lines (Сад, Гриль, new levels) and signature dishes, 2x2 sheets in the hero style
+    'food1': dict(grid=2, out=['food/pie_fest', 'food/cream', 'food/cheese_wheel', 'food/crab']),
+    'food2': dict(grid=2, out=['food/salmon', 'food/tuna', 'food/cabbage', 'food/pumpkin']),
+    'food3': dict(grid=2, out=['food/harvest', 'food/blueberry', 'food/strawberry', 'food/banana']),
+    'food4': dict(grid=2, out=['food/mango', 'food/watermelon', 'food/sausage', 'food/cutlet']),
+    'food5': dict(grid=2, out=['food/drumstick', 'food/kebab', 'food/tomahawk', 'gen/s']),
+    'food6': dict(grid=2, out=['gen/m', 'dish/trainer', 'dish/lifter', 'dish/office']),
+    'food7': dict(grid=2, out=['dish/cat', 'dish/dog', 'dish/hamster', 'dish/chef']),
+    'food8': dict(grid=2, out=['dish/grandma', 'dish/yoga', 'dish/kid', 'dish/student']),
+    'food9': dict(grid=2, out=['dish/zoomer', 'dish/muaythai', 'dish/strongman', 'dish/coachf']),
     # full backgrounds, no cutting
     'room0': dict(bg='room/base0'),
     'room1': dict(bg='room/base1'),

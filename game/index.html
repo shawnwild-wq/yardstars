@@ -96,7 +96,8 @@ button:focus-visible{outline:3px solid var(--sun);outline-offset:2px}
 .hero-in-room>span:not(.ic){font-size:10px;font-weight:800;color:#fff;background:rgba(58,36,20,.75);border-radius:6px;padding:1px 6px;white-space:nowrap}
 .roombar{position:absolute;left:8px;right:8px;bottom:8px;display:flex;gap:6px}
 .roombar .back{flex:0 0 auto;padding:0 12px}
-.room.outdoor .fur .ic{display:block;aspect-ratio:auto;filter:drop-shadow(0 5px 4px rgba(0,0,0,.28))}.room.outdoor .fur .ic img{height:auto}
+/* картинки мебели обрезаны по самому предмету: стоят на своей нижней точке, без пустых полей */
+.room .fur .ic{display:block;aspect-ratio:auto;filter:drop-shadow(0 5px 4px rgba(0,0,0,.28))}.room .fur .ic img{height:auto}.room .fur .ic.nf{display:grid;aspect-ratio:1}
 .room.outdoor{background:linear-gradient(#bfe3f0 0 30%,#9cc777 30% 100%)}
 .ptitle{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:rgba(58,36,20,.8);color:#fff4dc;font-weight:800;font-size:14px;padding:4px 12px;border-radius:12px;white-space:nowrap}
 .street{gap:8px;overflow:auto}
@@ -411,15 +412,15 @@ const AVATARS = ['m0','m1','m2','m3','f0','f1','f2','f3'];
 const AVATAR_EMOJI = { m0:'🧔', m1:'👨🏾‍🦲', m2:'👨🏻‍🎓', m3:'👱‍♂️', f0:'👩', f1:'👩🏾‍🦱', f2:'👩‍🦰', f3:'👩🏻' };
 const REPAIRS = [
   {id:'walls', e:'🎨', n:'Новые стены и пол', c:40, t:60},
-  {id:'rug', e:'🟠', n:'Мягкий ковёр', c:80, t:5*60, pos:[50,95,72]},
-  {id:'sofa', e:'🛋️', n:'Диван', c:150, t:15*60, pos:[50,73,54]},
-  {id:'lamp', e:'💡', n:'Торшер', c:200, t:30*60, pos:[71,72,46]},
-  {id:'table', e:'🫖', n:'Столик', c:260, t:45*60, pos:[50,85,26]},
-  {id:'shelf', e:'📚', n:'Книжная полка', c:350, t:60*60, pos:[84,66,56]},
-  {id:'plant', e:'🪴', n:'Большой цветок', c:450, t:90*60, pos:[13,96,30]},
-  {id:'pictures', e:'🖼️', n:'Картины', c:550, t:2*3600, pos:[19,31,28]},
-  {id:'wardrobe', e:'🚪', n:'Шкаф', c:650, t:3*3600, pos:[17,66,60]},
-  {id:'lights', e:'✨', n:'Гирлянда', c:800, t:4*3600, pos:[50,44,94]},
+  {id:'rug', e:'🟠', n:'Мягкий ковёр', c:80, t:5*60, pos:[50,93,70]},
+  {id:'sofa', e:'🛋️', n:'Диван', c:150, t:15*60, pos:[48,73,46]},
+  {id:'lamp', e:'💡', n:'Торшер', c:200, t:30*60, pos:[73,71,14]},
+  {id:'table', e:'🫖', n:'Столик', c:260, t:45*60, pos:[50,85,22]},
+  {id:'shelf', e:'📚', n:'Книжная полка', c:350, t:60*60, pos:[85,69,26]},
+  {id:'plant', e:'🪴', n:'Большой цветок', c:450, t:90*60, pos:[89,90,18]},
+  {id:'pictures', e:'🖼️', n:'Картины', c:550, t:2*3600, pos:[84,44,20]},
+  {id:'wardrobe', e:'🚪', n:'Шкаф', c:650, t:3*3600, pos:[17,69,30]},
+  {id:'lights', e:'✨', n:'Гирлянда', c:800, t:4*3600, pos:[50,28,66]},
   {id:'y_bench', p:'yard', e:'🪑', n:'Скамейка', c:150, t:600, pos:[50, 88, 26]},
   {id:'y_sandbox', p:'yard', e:'🏖️', n:'Песочница', c:190, t:900, pos:[74, 64, 28]},
   {id:'y_swing', p:'yard', e:'🎠', n:'Качели', c:250, t:1380, pos:[74, 40, 32]},
@@ -675,7 +676,7 @@ function normalize(){
   const inTeam = new Set(S.teams.flat());
   for(const h of HERO_IDS) if(ownsHero(h) && !inTeam.has(h)) autoTeam(h);
   if(!Array.isArray(S.board) || S.board.length!==N) S.board = freshBoard(S.firstHero||'trainer');
-  S.orders = S.orders.slice(0, orderSlots()).map(o => o && HEROES[o.hero] && teamHeroes().includes(o.hero) ? o : null);
+  S.orders = S.orders.slice(0, orderSlots()).map(o => o && HEROES[o.hero] && (!o.story || teamHeroes().includes(o.hero)) ? o : null);
   if(S.goals.day !== dayKey(now())){ S.goals.day = dayKey(now()); S.goals.done = {}; }
   ensureOrders(); placeChests();
 }
@@ -747,9 +748,14 @@ function addXp(n){
 }
 
 /* ---------- заказы ---------- */
+// заказы приходят от ВСЕХ персонажей игры; герои из команды — примерно в половине заказов, чтобы они росли в уровне
+function orderHero(){
+  const team = teamHeroes(), others = HERO_IDS.filter(h => !team.includes(h) && HEROES[h].fav.some(lineOpen));
+  if(!others.length || (team.length && Math.random() < .5)) return team.length ? pick(team) : null;
+  return pick(others);
+}
 function mkOrder(force){
-  const hs = teamHeroes(); if(!hs.length) return null;
-  const hi = force && hs.includes(force) ? force : pick(hs), h = HEROES[hi];
+  const hi = force && HEROES[force] ? force : orderHero(); if(!hi) return null; const h = HEROES[hi];
   const favs = h.fav.filter(lineOpen);
   const maxL = Math.min(4, 1+Math.floor((S.level+1)/2));
   const cnt = S.level>=3 && Math.random()<.45 ? 2 : 1;
@@ -778,8 +784,8 @@ function give(k){
   S.coins += pay; addXp(Math.round(o.reward/3 * (1 + skill('xp')))); S.stats.orders++; mc('orders');
   if(kept) setTimeout(() => toast('🥊 Тайский боец: продукты остались на поле!'), 1300);
   const H = S.heroes[o.hero], h = HEROES[o.hero];
-  H.xp = (H.xp||0)+1;
-  if(H.xp >= heroNeed(H.lv) && H.lv < CONFIG.HERO_MAX_LEVEL){ H.xp = 0; H.lv++; mc('herolv'); S.coins += CONFIG.HERO_LEVEL_COINS + 10*H.lv;
+  if(H) H.xp = (H.xp||0)+1;
+  if(H && H.xp >= heroNeed(H.lv) && H.lv < CONFIG.HERO_MAX_LEVEL){ H.xp = 0; H.lv++; mc('herolv'); S.coins += CONFIG.HERO_LEVEL_COINS + 10*H.lv;
     const hid = o.hero, news = [];
     if(hid){ if(hairList(hid).some(x => hairLevel(hid,x[0])===H.lv)) news.push('новая внешность'); if(costumeList(hid).some(x => costumeLevel(hid,x[0])===H.lv)) news.push('секретный костюм'); }
     toast(h.e+' '+hn(o.hero)+' — уровень '+H.lv+'! +'+(CONFIG.HERO_LEVEL_COINS + 10*H.lv)+' 🪙'+(news.length?'\n🔓 Открыто: '+news.join(' и '):''), 3600); }
@@ -1030,7 +1036,7 @@ function heroesHtml(){
       return `<div class="team${open?'':' locked'}"><div class="thead">${head}</div><div class="slots">${slots}</div></div>`;
     }).join('');
     const pickList = teamPick ? `<div class="row" style="flex-direction:column;align-items:stretch"><b style="color:var(--wood)">Кого поставить?</b><div class="grid4">${ownedHeroes().filter(h=>teamOf(h)<0).map(h=>`<button class="card" data-put="${h}">${heroFace(h)}<span>${hn(h)}</span></button>`).join('') || '<p>Все твои герои уже в командах. Новых — во вкладке «Коллекция».</p>'}</div></div>` : '';
-    return `<div class="panel">${tabs}<p>Заказы дают только герои из команд. Нажми на героя — откроется его карточка, на «+» — выбор героя. Новая команда — ещё один заказ на кухне.</p>${rows}
+    return `<div class="panel">${tabs}<p>Заказы приходят от всех соседей, а герои из команд заглядывают чаще — от заказов они растут в уровне. Нажми на героя — откроется его карточка, на «+» — выбор героя. Новая команда — ещё один заказ на кухне.</p>${rows}
       <p style="font-size:12px">Клубы: 💪 Спорт › 🏙️ Город › 🌳 Двор › 💪 Спорт — пригодится в турнирах.</p></div>`;
   }
   const byClub = Object.keys(CLUBS).map(c => {
@@ -1331,7 +1337,7 @@ document.addEventListener('click', e => {
     teamPick = i; openSheet('pick', i); return; }
   if(ds.put){ const i = teamPick; if(i!=null && teamOpen(i) && S.teams[i].length<TEAM_SIZE && teamOf(ds.put)<0){ S.teams[i].push(ds.put); teamPick = null; markDirty(); ensureOrders(); closeSheet(); render(); haptic('ok'); toast(HEROES[ds.put].e+' '+hn(ds.put)+' — в команде '+(i+1)); } return; }
   if(ds.unteam){ const h = ds.unteam, i = teamOf(h); if(i<0) return; if(S.teams.flat().length<=1){ toast('В командах должен остаться хотя бы один герой'); return; }
-    S.teams[i] = S.teams[i].filter(x=>x!==h); markDirty(); ensureOrders(); redraw(); render(); toast(hn(h)+' отдыхает — заказы от него не приходят'); return; }
+    S.teams[i] = S.teams[i].filter(x=>x!==h); markDirty(); ensureOrders(); redraw(); render(); toast(hn(h)+' отдыхает — теперь он заходит с заказами реже'); return; }
   if(ds.toteam){ const h = ds.toteam; if(teamOf(h)>=0) return; const i = S.teams.findIndex((t,k) => teamOpen(k) && t.length<TEAM_SIZE);
     if(i<0){ toast('Все открытые команды заполнены. Убери кого-нибудь или открой новую команду'); return; }
     S.teams[i].push(h); markDirty(); ensureOrders(); redraw(); render(); haptic('ok'); toast(hn(h)+' — в команде '+(i+1)); return; }
