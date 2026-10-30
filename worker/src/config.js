@@ -125,7 +125,7 @@ export const HEROES = {
   kid: 'epic', chef: 'rare', dog: 'rare', hamster: 'rare', grandma: 'rare', yoga: 'epic',
 };
 export const HERO_NAMES = { trainer: 'Тренер', lifter: 'Лифтёр', office: 'Офисник', cat: 'Кот', strongman: 'Стронгмен', muaythai: 'Тайский боец',
-  coachf: 'Фитнес-тренер', student: 'Студентка', zoomer: 'Зумер', kid: 'Ребёнок', chef: 'Шеф', dog: 'Пёс', hamster: 'Хомяк', grandma: 'Бабушка', yoga: 'Йог' };
+  coachf: 'Музыкантша', student: 'Студентка', zoomer: 'Зумер', kid: 'Ребёнок', chef: 'Шеф', dog: 'Пёс', hamster: 'Хомяк', grandma: 'Бабушка', yoga: 'Йог' };
 export const HERO_PRICE = { rare: 300, epic: 500 };
 export const GIFT_LEVELS = [3, 6, 10];
 export const SHARD_HEROES_PER_LEVELS = 4;     // at most one shard-built hero per 4 levels (anti-cheat cap)
@@ -138,18 +138,17 @@ export const LOOKS = {
   lifter: { l_plain: 0, l_bald: 75, l_hair: 75, l_hairbeard: 75, l_viking: 500, l_gold: 1000 },
   office: { o_a: 0, o_b: 75, o_c: 75, o_boss: 250, o_astro: 500 },
   cat: { c_a: 0, c_b: 75, c_c: 75, c_pirate: 250, c_knight: 500 },
-  strongman: { strongman_a: 0, strongman_h1: 75, strongman_h2: 75, strongman_b: 250 }, muaythai: { muaythai_a: 0, muaythai_h1: 75, muaythai_h2: 75, muaythai_b: 250 }, coachf: { coachf_a: 0, coachf_h1: 75, coachf_h2: 75, coachf_b: 250 },
+  strongman: { strongman_a: 0, strongman_h1: 75, strongman_h2: 75, strongman_b: 250 }, muaythai: { muaythai_a: 0, muaythai_h1: 75, muaythai_h2: 75, muaythai_b: 250 }, coachf: { coachf_a: 0 },
   student: { student_a: 0, student_h1: 75, student_h2: 75, student_b: 250 }, zoomer: { zoomer_a: 0, zoomer_h1: 75, zoomer_h2: 75, zoomer_b: 250 }, kid: { kid_a: 0, kid_h1: 75, kid_h2: 75, kid_b: 250 }, chef: { chef_a: 0, chef_h1: 75, chef_h2: 75, chef_b: 250 },
   dog: { dog_a: 0, dog_h1: 75, dog_h2: 75 }, hamster: { hamster_a: 0, hamster_h1: 75, hamster_h2: 75 }, grandma: { grandma_a: 0, grandma_h1: 75, grandma_h2: 75, grandma_b: 250 }, yoga: { yoga_a: 0, yoga_h1: 75, yoga_h2: 75, yoga_b: 250 },
 };
 export const LOOK_NAMES = {
   l_bald: 'Лысый', l_hair: 'С причёской', l_hairbeard: 'Причёска и борода', t_b: 'Блонд', t_c: 'Кудри и борода', t_hero: 'Супер-тренер', t_samurai: 'Сенсей', l_viking: 'Викинг', l_gold: 'Золотой чемпион',
   o_b: 'Гладко зачёсан', o_c: 'Лысина и борода', o_boss: 'Директор', o_astro: 'Астронавт', c_b: 'Серый кот', c_c: 'Чёрный кот', c_pirate: 'Пират', c_knight: 'Рыцарь',
-  strongman_b: 'Турнир силачей', muaythai_b: 'Бой на стадионе', coachf_b: 'Марафон', student_b: 'Выпускной', zoomer_b: 'Звезда реков',
+  strongman_b: 'Турнир силачей', muaythai_b: 'Бой на стадионе', student_b: 'Выпускной', zoomer_b: 'Звезда реков',
   kid_b: 'Юный учёный', chef_b: 'Банкет', grandma_b: 'Пироги', yoga_b: 'Вечерний уют',
   strongman_h1: 'Блондин', strongman_h2: 'Узел и усы',
   muaythai_h1: 'Блонд-ёжик', muaythai_h2: 'Коса',
-  coachf_h1: 'Пикси', coachf_h2: 'Высокий хвост',
   student_h1: 'Каре и очки', student_h2: 'Розовая прядь',
   zoomer_h1: 'Синий маллет', zoomer_h2: 'Панамка',
   kid_h1: 'Кудряшки', kid_h2: 'Ирокез',
@@ -173,7 +172,8 @@ export const GEAR_STARS = {
 export const HAIR = {
   trainer: ['t_a', 't_b', 't_c'], lifter: ['l_plain', 'l_bald', 'l_hair', 'l_hairbeard'],
   office: ['o_a', 'o_b', 'o_c'], cat: ['c_a', 'c_b', 'c_c'],
-  ...Object.fromEntries(['strongman', 'muaythai', 'coachf', 'student', 'zoomer', 'kid', 'chef', 'dog', 'hamster', 'grandma', 'yoga']
+  coachf: ['coachf_a'],   // 30.10: musicians instead of the fitness coach; new looks will be drawn later
+  ...Object.fromEntries(['strongman', 'muaythai', 'student', 'zoomer', 'kid', 'chef', 'dog', 'hamster', 'grandma', 'yoga']
     .map((h) => [h, [h + '_a', h + '_h1', h + '_h2']])),
 };
 // hero level that opens each appearance for free (by its place in HAIR); earlier only for Stars

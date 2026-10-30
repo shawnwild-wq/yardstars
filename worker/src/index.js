@@ -125,7 +125,7 @@ export function sanitize(prev, next, now, prevSavedAt) {
     out.upg = {};
     // the main hero: any hero, male or female version
     const hs = Object.keys(out.heroes || {}).filter((h) => HEROES[h]).slice(0, 1);
-    out.heroes = Object.fromEntries(hs.map((h) => [h, out.heroes[h] && out.heroes[h].sex === 'f' ? { lv: 1, xp: 0, sex: 'f' } : { lv: 1, xp: 0 }]));
+    out.heroes = Object.fromEntries(hs.map((h) => { const sx = out.heroes[h] && out.heroes[h].sex; return [h, sx === 'f' || sx === 'm' ? { lv: 1, xp: 0, sex: sx } : { lv: 1, xp: 0 }]; }));
     out.firstHero = hs[0];
     out.teams = [hs, [], [], []]; out.gear = {}; out.shards = {}; out.jars = 0;
     for (const f of SERVER_FIELDS) delete out[f];
@@ -249,7 +249,7 @@ export function sanitize(prev, next, now, prevSavedAt) {
     const plv = Number(P.lv) || 1;
     H.lv = Math.max(plv, Math.min(Number(H.lv) || 1, plv + 1, HERO_MAX_LEVEL));
     delete H.freeHair;
-    if (P.sex === 'f') H.sex = 'f'; else delete H.sex;   // chosen once at the start
+    if (P.sex === 'f' || P.sex === 'm') H.sex = P.sex; else delete H.sex;   // male / female version, chosen once at the start
     if (H.name !== undefined) { const nmv = String(H.name).replace(/[<>\n\r\t]/g, '').trim().slice(0, 16); if (nmv) H.name = nmv; else delete H.name; }
     // stars: +1 per save at most, capped by player level
     const ps = Number(P.stars) || 0;

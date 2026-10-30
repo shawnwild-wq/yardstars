@@ -268,6 +268,12 @@ Date.now = realNow;
   assert.equal(st.heroes.lifter.sex, 'f'); ok('female main hero saved');
   st.heroes.lifter.sex = 'm'; r = await call('/api/save', { initData: I, rev: p.rev, state: st });
   assert.equal(JSON.parse((await row()).state).heroes.lifter.sex, 'f'); ok('hero sex is chosen once');
+  // a hero whose main version is female (grandma) can be chosen as male (grandpa)
+  const IG = await initData({ id: 7202, first_name: 'Дед' }, env.BOT_TOKEN);
+  await call('/api/load', { initData: IG });
+  r = await call('/api/save', { initData: IG, rev: 0, state: { owner: { avatar: 'm1' }, firstHero: 'grandma', heroes: { grandma: { lv: 1, sex: 'm' } }, coins: 20, level: 1, energy: 100, eTs: Date.now() } });
+  const g = JSON.parse((await env.DB.prepare('SELECT state FROM players WHERE uid=7202').first()).state);
+  assert.equal(g.heroes.grandma.sex, 'm'); ok('male version of a female-based hero saved');
   const U2 = { id: 6107, first_name: 'Ян' }, I2 = await initData(U2, env.BOT_TOKEN);
   await call('/api/load', { initData: I2 });
   await call('/api/save', { initData: I2, rev: 0, state: { owner: { avatar: 'm1' }, firstHero: 'hamster', heroes: { hamster: { lv: 1 } }, teams: [['hamster'], [], [], []], coins: 20, level: 1, energy: 100, eTs: Date.now() } });

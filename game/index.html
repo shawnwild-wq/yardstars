@@ -304,7 +304,7 @@ const HEROES = {
   cat:      {n:'Кот', e:'🐱', club:'yard', rar:'starter', fav:['d','f'], line:'Молоко — хорошо. Рыба — лучше.', story:STORY('Кот идёт на выставку',[[['d',2]],[['f',2]],[['f',3]]],220,'joker')},
   strongman:{n:'Стронгмен', e:'🦾', club:'sport', rar:'epic', fav:['b','m'], line:'Двойную порцию. Нет, тройную.', story:STORY('Турнир силачей',[[['b',3]],[['d',3],['b',2]],[['b',4]]],260,'chest')},
   muaythai: {n:'Тайский боец', e:'🥊', club:'sport', rar:'epic', fav:['g','m','f'], line:'Лёгкий рис, свежая рыба — и в бой.', story:STORY('Бой на стадионе',[[['f',2]],[['g',3]],[['f',4]]],260,'joker')},
-  coachf:   {n:'Фитнес-тренер', e:'🏃‍♀️', club:'sport', rar:'rare', fav:['g','m','s'], line:'Марафон сам себя не пробежит!', story:STORY('Марафон',[[['g',2]],[['d',2]],[['g',4]]],220,'chest')},
+  coachf:   {n:'Музыкантша', e:'🎸', club:'city', rar:'rare', fav:['g','m','s'], line:'Сыграю — и сразу к столу!', story:STORY('Концерт во дворе',[[['g',2]],[['d',2]],[['g',4]]],220,'chest')},
   student:  {n:'Студентка', e:'📚', club:'city', rar:'rare', fav:['b','g','m'], line:'Сессия скоро, а я голодная.', story:STORY('Сессия',[[['b',2]],[['g',2],['b',1]],[['b',3]]],200,'joker')},
   zoomer:   {n:'Зумер', e:'🎧', club:'city', rar:'epic', fav:['d','s'], line:'Сфоткаю еду — и сразу в рек.', story:STORY('Вирусный ролик',[[['d',2]],[['f',3]],[['d',4]]],260,'chest')},
   kid:      {n:'Ребёнок', e:'🧒', club:'city', rar:'epic', fav:['b','d','s'], line:'А пирог будет? А торт?', story:STORY('Олимпиада',[[['d',1],['b',1]],[['b',3]],[['b',4]]],240,'joker')},
@@ -316,10 +316,18 @@ const HEROES = {
 };
 const HERO_IDS = Object.keys(HEROES);
 const STARTERS = ['trainer','lifter','office','cat'];
-// женские версии героев (у остальных скоро появятся): образ героини
-const FEM = { lifter:'lf_f', trainer:'tf_f', office:'of_f' };
-const FEM_NAME = { lifter:'Лифтёрша', trainer:'Фитнес-тренер', office:'Офисница' };
-const isFem = h => !!(S && S.heroes && S.heroes[h] && S.heroes[h].sex==='f' && FEM[h]);
+// у каждого героя две версии — мужская и женская. Основная — в LOOKS, вторая — здесь: [картинка, имя]
+const BASE_SEX = { student:'f', grandma:'f', yoga:'f', coachf:'f' };   // у этих основная версия женская, у остальных мужская
+const baseSex = h => BASE_SEX[h] || 'm';
+const altSex = h => baseSex(h)==='m' ? 'f' : 'm';
+const ALT = {
+  lifter:['lf_f','Лифтёрша'], trainer:['tf_f','Тренерша'], office:['of_f','Офисница'], cat:['cat_f','Кошка'],
+  dog:['dog_f','Собака'], hamster:['hamster_f','Хомячиха'], grandma:['grandma_m','Дедушка'], kid:['kid_f','Девочка'],
+  chef:['chef_f','Повариха'], strongman:['strongman_f','Стронгвумен'], muaythai:['muaythai_f','Тайская боксёрша'],
+  student:['student_m','Студент'], zoomer:['zoomer_f','Зумерша'], yoga:['yoga_m','Йог'], coachf:['coachf_m','Музыкант'],
+};
+// второй вариант выбран, если пол героя не совпадает с полом основной версии (H.sex выбирается один раз, при старте)
+const isAlt = h => !!(S && S.heroes && S.heroes[h] && S.heroes[h].sex && ALT[h] && S.heroes[h].sex !== baseSex(h));
 const GIFT_LEVELS = [3, 6, 10];             // уровни, на которых бесплатно приходит следующий стартовый герой
 const HERO_PRICE = { rare:300, epic:500 };  // ⭐
 const SHARDS_NEED = 10;
@@ -383,7 +391,7 @@ const LOOKS = {
   cat:      [['c_a','Рыжий',0,'hair'],['c_b','Серый',75,'hair'],['c_c','Чёрный',75,'hair'],['c_pirate','Пират',250,'rare'],['c_knight','Рыцарь',500,'epic']],
   strongman:[['strongman_a','Фермер',0,'hair'],['strongman_h1','Блондин',75,'hair'],['strongman_h2','Узел и усы',75,'hair'],['strongman_b','Турнир силачей',250,'rare']],
   muaythai: [['muaythai_a','Тренировка',0,'hair'],['muaythai_h1','Блонд-ёжик',75,'hair'],['muaythai_h2','Коса',75,'hair'],['muaythai_b','Бой на стадионе',250,'rare']],
-  coachf:   [['coachf_a','Зал',0,'hair'],['coachf_h1','Пикси',75,'hair'],['coachf_h2','Высокий хвост',75,'hair'],['coachf_b','Марафон',250,'rare']],
+  coachf:   [['coachf_a','Гитара',0,'hair']],   // 30.10: вместо фитнес-тренера — музыканты; новые внешности и костюмы дорисуем
   student:  [['student_a','Учёба',0,'hair'],['student_h1','Каре и очки',75,'hair'],['student_h2','Розовая прядь',75,'hair'],['student_b','Выпускной',250,'rare']],
   zoomer:   [['zoomer_a','Стритстайл',0,'hair'],['zoomer_h1','Синий маллет',75,'hair'],['zoomer_h2','Панамка',75,'hair'],['zoomer_b','Звезда реков',250,'rare']],
   kid:      [['kid_a','Каждый день',0,'hair'],['kid_h1','Кудряшки',75,'hair'],['kid_h2','Ирокез',75,'hair'],['kid_b','Юный учёный',250,'rare']],
@@ -437,7 +445,7 @@ const costumeList = h => LOOKS[h].filter(x => !(x[3]==='hair' || x[2]===0));
 function setStage(h){ const sets = GEAR_SETS[h]||[], g = (S.gear&&S.gear[h])||[]; let best = null; for(const st of sets) if(st[1].every(x=>g.includes(x))) best = st; return best; }
 function curHair(h){ const H = S && S.heroes[h], x = H && H.hair; return x && isHair(h,x) && ownsLook(h,x) ? x : LOOKS[h][0][0]; }
 function setLook(h){ const st = setStage(h); return st ? setImg(curHair(h), st[2]) : null; }
-function curLook(h){ if(isFem(h)) return FEM[h]; const H = S && S.heroes[h]; const chosen = H && H.look; if(chosen && chosen !== 'auto' && !isHair(h,chosen) && ownsLook(h, chosen)) return chosen; return setLook(h) || curHair(h); }
+function curLook(h){ if(isAlt(h)) return ALT[h][0]; const H = S && S.heroes[h]; const chosen = H && H.look; if(chosen && chosen !== 'auto' && !isHair(h,chosen) && ownsLook(h, chosen)) return chosen; return setLook(h) || curHair(h); }
 function ownsLook(h,id){ const L = LOOKS[h].find(x=>x[0]===id); if(!L) return false; const H = S && S.heroes[h]; return L[2]===0 || (S.paidLooks||[]).includes(id) || (isHair(h,id) && !!H && heroLv(h) >= hairLevel(h,id)); }
 function gearBonus(h){ const g = (S.gear&&S.gear[h])||[]; let b = 0; for(const it of (GEAR[h]||[])) if(g.includes(it[0])) b += it[4]; if(setLook(h)) b += SET_BONUS; return b; }
 const AVATARS = ['m0','m1','m2','m3','f0','f1','f2','f3'];
@@ -498,7 +506,7 @@ REPAIRS.forEach(r => { if(!r.p) r.p = 'home'; });
 const PLACES = [
   {id:'home', n:'Мой дом', e:'🏠', lvl:1, d:'Комната, где живёт первая команда'},
   {id:'yard', n:'Двор', e:'🌳', lvl:3, heroes:["kid", "cat", "hamster", "dog"]},
-  {id:'sport', n:'Спортплощадка', e:'🏋️', lvl:5, heroes:["trainer", "lifter", "strongman", "muaythai", "coachf"]},
+  {id:'sport', n:'Спортплощадка', e:'🏋️', lvl:5, heroes:["trainer", "lifter", "strongman", "muaythai"]},
   {id:'cafe', n:'Кафе Шефа', e:'☕', lvl:8, heroes:["chef", "office", "student", "zoomer"]},
   {id:'park', n:'Парк', e:'🌷', lvl:11, heroes:["yoga", "grandma", "dog", "coachf"]},
   {id:'market', n:'Рынок', e:'🧺', lvl:14, heroes:["grandma", "chef", "hamster", "student"]},
@@ -696,7 +704,7 @@ function freshBoard(first){
   return b;
 }
 function firstHeroState(o){
-  const H = {lv:1, xp:0}; if(o.sex==='f' && FEM[o.hero]) H.sex = 'f';
+  const H = {lv:1, xp:0}; if(ALT[o.hero] && o.sex && o.sex !== baseSex(o.hero)) H.sex = o.sex;
   return H;
 }
 function newState(o){
@@ -779,7 +787,7 @@ function giveReward(g){ const got = [];
 function giveText(g){ const a = []; if(g.tok) a.push(g.tok+' 🎫'); if(g.jars) a.push(g.jars+' 🥫'); if(g.coins) a.push(g.coins+' 🪙'); if(g.chests) a.push(g.chests+' 🎁'); if(g.shards) a.push(g.shards+' 🧩'); return a.join(', '); }
 function rewChips(g){ const a = []; if(g.tok) a.push(`<span class="rw">🎫<i>${g.tok}</i></span>`); if(g.jars) a.push(`<span class="rw">${ic('sp/jar','🥫')}<i>${g.jars}</i></span>`);
   if(g.coins) a.push(`<span class="rw">${ic('sp/coin','🪙')}<i>${g.coins}</i></span>`); if(g.chests) a.push(`<span class="rw">${ic('sp/chest','🎁')}<i>${g.chests}</i></span>`); if(g.shards) a.push(`<span class="rw">🧩<i>${g.shards}</i></span>`); return a.join(''); }
-const hn = id => (S && S.heroes && S.heroes[id] && S.heroes[id].name) || (isFem(id) ? FEM_NAME[id] : HEROES[id].n);
+const hn = id => (S && S.heroes && S.heroes[id] && S.heroes[id].name) || (isAlt(id) ? ALT[id][1] : HEROES[id].n);
 
 function normalize(){
   S.heroes = S.heroes||{}; S.upg = S.upg||{}; S.gen = S.gen||{}; S.story = S.story||{}; S.orders = S.orders||[];
@@ -1181,7 +1189,7 @@ function wardrobeHtml(){
   return `<p>Твои вещи сохранены. Надевать их можно будет в следующем обновлении.</p><div>${own.map(k=>`<span class="chip">👕 ${esc(name(k))}</span>`).join('')}</div>`;
 }
 function looksHtml(h){
-  if(isFem(h)) return '<p>Новые внешности и костюмы для неё уже рисуются — скоро появятся здесь.</p>';
+  if(isAlt(h)) return '<p>Новые внешности и костюмы для '+(altSex(h)==='f'?'неё':'него')+' уже рисуются — скоро появятся здесь.</p>';
   const cur = curLook(h), hair = curHair(h), sl = setLook(h), HL = hairList(h), lv = heroLv(h);
   let out = '';
   if(HL.length > 1){
@@ -1542,10 +1550,11 @@ document.addEventListener('pointercancel', () => { clearTimeout(lp); lp = null; 
    ЗНАКОМСТВО
    ===================================================================== */
 let ob = { step:0, avatar:null, name:'', hero:null, look:null, bday:null };
+const obSex = () => ob.sex || (ob.hero ? baseSex(ob.hero) : 'm');
 function onboarding(imported){
   const app = $('app');
   const suggested = imported && imported.pet ? ({trainer:'trainer',office:'office',cat:'cat',lifter:'lifter',powerlifter:'lifter',lifterf:'lifter'})[imported.pet.type] : null;
-  if(suggested && !ob.hero){ ob.hero = suggested; if(FEM[suggested] && (imported.pet.sex==='f' || imported.pet.type==='lifterf')) ob.sex = 'f'; }
+  if(suggested && !ob.hero){ ob.hero = suggested; ob.sex = baseSex(suggested); if(ALT[suggested] && (imported.pet.sex==='f' || imported.pet.type==='lifterf')) ob.sex = 'f'; }
   if(!ob.name) ob.name = (ME.first_name||'').slice(0,20);
   let body = '';
   if(ob.step===0) body = `<div class="panel" style="text-align:center;align-items:center;justify-content:center"><div class="logo">Yard Stars</div>
@@ -1559,8 +1568,10 @@ function onboarding(imported){
       <label for="obName"><b style="color:var(--wood)">Как тебя зовут?</b></label><input id="obName" maxlength="20" value="${esc(ob.name)}" placeholder="Имя">
       <button class="btn b-go" data-ob="next" ${ob.avatar?'':'disabled'}>Дальше</button></div>`;
   else if(ob.step===2) body = `<div class="panel"><h2>Твой главный герой</h2><p>Выбери любого — он будет с тобой с первого дня. Остальные присоединятся позже.</p>
-      ${ob.hero && FEM[ob.hero] ? `<b style="color:var(--wood)">Мужчина или женщина?</b><div class="grid2"><button class="card${ob.sex!=='f'?' pick':''}" data-obsex="m">${lookFace(ob.hero, LOOKS[ob.hero][0][0])}<b>${HEROES[ob.hero].n}</b><span>мужчина</span></button><button class="card${ob.sex==='f'?' pick':''}" data-obsex="f">${lookFace(ob.hero, FEM[ob.hero])}<b>${FEM_NAME[ob.hero]}</b><span>женщина</span></button></div>` : ''}
-      <div class="grid2 g3">${HERO_IDS.map(h=>`<button class="card${ob.hero===h?' pick':''}" data-obhero="${h}">${lookFace(h, ob.hero===h && ob.sex==='f' && FEM[h] ? FEM[h] : LOOKS[h][0][0])}<b style="font-size:13px">${ob.hero===h && ob.sex==='f' && FEM[h] ? FEM_NAME[h] : HEROES[h].n}</b></button>`).join('')}</div>
+      ${ob.hero && ALT[ob.hero] ? `<b style="color:var(--wood)">Мужчина или женщина?</b><div class="grid2">${['m','f'].map(sx => { const alt = sx !== baseSex(ob.hero);
+        return `<button class="card${obSex()===sx?' pick':''}" data-obsex="${sx}">${lookFace(ob.hero, alt ? ALT[ob.hero][0] : LOOKS[ob.hero][0][0])}<b>${alt ? ALT[ob.hero][1] : HEROES[ob.hero].n}</b><span>${sx==='m'?'мужчина':'женщина'}</span></button>`; }).join('')}</div>` : ''}
+      <div class="grid2 g3">${HERO_IDS.map(h=>{ const alt = ob.hero===h && ALT[h] && obSex() !== baseSex(h);
+        return `<button class="card${ob.hero===h?' pick':''}" data-obhero="${h}">${lookFace(h, alt ? ALT[h][0] : LOOKS[h][0][0])}<b style="font-size:13px">${alt ? ALT[h][1] : HEROES[h].n}</b></button>`; }).join('')}</div>
       ${ob.hero ? `<p>«${esc(HEROES[ob.hero].line)}»</p>` : ''}
       ${suggested?`<p style="color:var(--ok)">Твой питомец «${esc(imported.pet.name||'')}» переехал с тобой.</p>`:''}
       <button class="btn b-go" data-ob="next" ${ob.hero?'':'disabled'}>Дальше</button></div>`;
@@ -1574,7 +1585,7 @@ document.addEventListener('click', e => {
   if(S) return; const t = e.target.closest('button'); if(!t) return; const ds = t.dataset;
   const nm = $('obName'); if(nm) ob.name = nm.value.trim().slice(0,20);
   if(ds.ava){ ob.avatar = ds.ava; onboarding(window._imp); return; }
-  if(ds.obhero){ if(ob.hero!==ds.obhero){ ob.look = null; ob.sex = 'm'; } ob.hero = ds.obhero; onboarding(window._imp); return; }
+  if(ds.obhero){ if(ob.hero!==ds.obhero){ ob.look = null; ob.sex = baseSex(ds.obhero); } ob.hero = ds.obhero; onboarding(window._imp); return; }
   if(ds.obsex){ ob.sex = ds.obsex; onboarding(window._imp); return; }
   if(ds.ob==='next'){ ob.step++; onboarding(window._imp); return; }
   if(ds.ob==='finish' || ds.ob==='skip'){
